@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: neuro-blogger
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: PORT
+        value: "10000"
+      - key: WEBHOOK_PATH
+        value: /webhook
+      - key: ADMIN_USER_IDS
+        value: "1342016402"
+      - key: IG_USERNAME
+        sync: false
+      - key: IG_PASSWORD
+        sync: false
+      - key: GROK_REFRESH_TOKEN
+        sync: false
+      - key: GROK_CLIENT_ID
+        sync: false
+      - key: GROK_ACCESS_TOKEN
+        sync: false
+      - key: VIDEO_RESOLUTION
+        value: "480p"
+      - key: VIDEO_DURATION
+        value: "10"
+      - key: LLM_MODEL
+        value: grok-4.6
+      - key: VIDEO_MODEL
+        value: grok-imagine-video-1.5
+      - key: VOICE_ID
+        value: rex

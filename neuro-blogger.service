@@ -1,0 +1,19 @@
+[Unit]
+Description=Neuro blogger (Grok Reels + Instagram + Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kali
+Group=kali
+WorkingDirectory=/home/kali/neuro-blogger
+EnvironmentFile=/home/kali/neuro-blogger/.env
+ExecStart=/home/kali/neuro-blogger/.venv/bin/python /home/kali/neuro-blogger/bot.py
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

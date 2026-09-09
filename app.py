@@ -1,0 +1,77 @@
+from __future__ import annotations
+
+import asyncio
+import logging
+import sys
+
+from aiohttp import web
+from aiogram.types import Update
+
+import config
+from bot import bot, dp, setup_dispatcher
+from config import BOT_TOKEN, reload_env
+from db import init_db
+
+logger = logging.getLogger("neuro")
+
+
+async def health_handler(_request: web.Request) -> web.Response:
+    return web.Response(status=200, text="OK")
+
+
+async def webhook_handler(request: web.Request) -> web.Response:
+    data = await request.json()
+    upd = Update.model_validate(data)
+    asyncio.get_running_loop().create_task(_process_update(upd))
+    return web.Response(status=200)
+
+
+async def _process_update(upd: Update) -> None:
+    try:
+        await dp.feed_update(bot, upd)
+    except Exception:
+        logger.exception("update %s", getattr(upd, "update_id", None))
+
+
+async def on_startup(_app: web.Application) -> None:
+    reload_env()
+    await init_db()
+    setup_dispatcher()
+    base = (config.WEBHOOK_URL or "").rstrip("/")
+    url = base + config.WEBHOOK_PATH
+    await bot.set_webhook(url=url, allowed_updates=dp.resolve_used_update_types())
+    logger.info("webhook set %s", url)
+
+
+async def on_cleanup(_app: web.Application) -> None:
+    await bot.session.close()
+    logger.info("shutdown, webhook left in place")
+
+
+def create_app() -> web.Application:
+    app = web.Application()
+    app.on_startup.append(on_startup)
+    app.on_cleanup.append(on_cleanup)
+    app.router.add_get("/health", health_handler)
+    app.router.add_get("/", health_handler)
+    app.router.add_post(config.WEBHOOK_PATH, webhook_handler)
+    return app
+
+
+def main() -> None:
+    if not BOT_TOKEN:
+        logger.error("BOT_TOKEN пустой")
+        sys.exit(1)
+    reload_env()
+    if not config.WEBHOOK_URL:
+        logger.warning("WEBHOOK_URL пуст — polling")
+        from bot import main as polling_main
+
+        asyncio.run(polling_main())
+        return
+    logger.info("webhook server %s:%s", config.WEBAPP_HOST, config.WEBAPP_PORT)
+    web.run_app(create_app(), host=config.WEBAPP_HOST, port=config.WEBAPP_PORT)
+
+
+if __name__ == "__main__":
+    main()

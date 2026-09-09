@@ -1,0 +1,16 @@
+.venv
+.env
+.git
+logs
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/videos
+data/character.*
+data/ig_session.json
+.pid
+__pycache__
+*.pyc
+README.md
+neuro-blogger.service
+ctl.sh
