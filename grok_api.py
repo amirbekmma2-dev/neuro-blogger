@@ -14,7 +14,6 @@ from config import (
     IMAGE_MODEL,
     LLM_MODEL,
     VIDEO_ASPECT,
-    VIDEO_DURATION,
     VIDEO_MODEL,
     VIDEO_RESOLUTION,
     VIDEO_DIR,
@@ -83,17 +82,19 @@ async def chat_text(system: str, user: str, model: str | None = None) -> str:
         raise GrokError(f"Странный ответ LLM: {data}") from exc
 
 
-async def invent_script(topic: str | None = None) -> dict:
+async def invent_script(topic: str | None = None, avoid: list[str] | None = None) -> dict:
     p = load_persona()
     tags = " ".join(p.get("hashtags") or [])
     bank = p.get("viral_topics") or []
     bank_txt = "\n".join(f"- {t}" for t in bank)
-    chosen = topic or "o'zing viral sport-ovqat g'oyasini tanla, bankdagi mavzulardan yoki yangisidan"
+    skip = "\n".join(f"- {x}" for x in (avoid or [])[:12])
+    chosen = topic or "o'zing yangi viral sport-ovqat g'oyasini tanla (bankdan yoki yangi), takrorlama"
     system = (
         "Sen O'zbekiston Instagram Reels uchun viral ssenarist san. "
         "Faqat JSON qaytar, markdown yo'q. "
-        "Gapirish va caption — faqat o'zbek tili, lotin alifbosi (o' / g' bilan). "
-        "Ruscha gap yo'q. Inglizcha faqat video_prompt ichida."
+        "Og'zaki nutq va caption — FAQAT o'zbek tili, lotin alifbosi (o' / g'). "
+        "Ruscha va inglizcha gap YO'Q (inglizcha faqat video_prompt). "
+        "Video 15 soniya: odam to'liq 2-3 qisqa gap aytadi, 30-40 so'z atrofida."
     )
     user = f"""Akaunt: @{p.get('ig_handle')}  personaj: {p.get('name')}
 Nisha: {p.get('niche')}
@@ -103,21 +104,23 @@ CTA: {p.get('cta')}
 Hashtaglar: {tags}
 Mavzu banki:
 {bank_txt}
+Oxirgi chiqqanlar (takrorlama):
+{skip or "- yo'q"}
 Berilgan mavzu: {chosen}
 
-Maqsad: odam skrollni TO'XTATSIN. Million view uchun formula:
-- hook 6-10 so'z, birinchi 1 soniyada uradi (ayblash, raqam, afsona, taqiqlangan ovqat)
-- bitta aniq fikr, suv yo'q
-- Toshkent/O'zbekiston hayoti: palov, somsa, choyxona, arzon tovuq, tuxum, zal
-- bahslashish: odam kommentga yozsin
-- saqlashga sabab (raqam, ro'yxat, «bilmagan edim»)
+15 soniyalik Reels formulasi (Explore/top uchun):
+1) 0-2s hook: ayblash, raqam, taqiqlangan ovqat, «to'xta»
+2) 2-11s bitta aniq foyda: nima qilish/nemani tashlash, Toshkent hayoti (palov, somsa, choyxona, arzon tovuq, tuxum, zal)
+3) 11-15s CTA: saqla + kommentga savol
+Suv yo'q. Bitta fikr. Bahslashish.
 
 JSON:
 {{
-  "idea": "o'zbekcha, 1 qator nima haqida",
-  "hook": "o'zbekcha og'zaki gap, 6-10 so'z, shok/qiziqish. Masalan: Palov yeb zalga chiqma.",
-  "video_prompt": "English visual direction, 2-3 sentences, present tense, vertical 9:16, photorealistic, ONE continuous shot. First frame MUST stop the scroll (food slam, extreme close-up, unexpected object). The person from <IMAGE_1> is the only human. They speak fluent Uzbek (not Russian, not English) exactly this line: <the hook>. Voice from <AUDIO_0>. Simple camera move. Kitchen or gym or Tashkent street-food table. No on-screen text, no subtitles, no logos, no watermark.",
-  "caption": "o'zbekcha 2-4 qisqa gap + CTA + hashtaglar. Lotin alifbo."
+  "idea": "o'zbekcha 1 qator",
+  "hook": "birinchi og'zaki gap, 6-10 so'z, shok",
+  "spoken": "to'liq o'zbekcha monolog 15 soniyaga, 2-3 gap, hook bilan boshlanadi, oxirida CTA",
+  "video_prompt": "English visual, present tense, vertical 9:16, photorealistic, ONE continuous 15-second shot. First frame stops the scroll (food slam, extreme close-up). The person from <IMAGE_1> is the only human. They speak fluent conversational Uzbek (not Russian, not English) saying exactly: <spoken>. Voice from <AUDIO_0>. Simple camera move, kitchen or gym or Tashkent food table. No on-screen text, no subtitles, no logos, no watermark.",
+  "caption": "o'zbekcha 2-4 qisqa gap + CTA + hashtaglar, lotin"
 }}
 """
     raw = await chat_text(system, user)
@@ -129,11 +132,13 @@ JSON:
         if not data.get(key):
             raise GrokError(f"Ssenariyda {key} yo'q")
     hook = data["hook"].strip().strip('"')
+    spoken = (data.get("spoken") or hook).strip().strip('"')
     data["hook"] = hook
-    if hook.lower() not in data["video_prompt"].lower() and "Uzbek" in data["video_prompt"]:
+    data["spoken"] = spoken
+    if spoken not in data["video_prompt"]:
         data["video_prompt"] = (
             data["video_prompt"].rstrip(".")
-            + f' They say in Uzbek: "{hook}".'
+            + f' They speak fluent Uzbek, exact lines: "{spoken}".'
         )
     return data
 
@@ -176,7 +181,7 @@ async def generate_video(
     voice_id: str | None = None,
 ) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    duration = duration or VIDEO_DURATION
+    duration = 15
     resolution = resolution or VIDEO_RESOLUTION
     voice_id = (voice_id if voice_id is not None else VOICE_ID) or ""
 

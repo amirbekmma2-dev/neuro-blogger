@@ -27,7 +27,13 @@ services:
       - key: VIDEO_RESOLUTION
         value: "480p"
       - key: VIDEO_DURATION
-        value: "10"
+        value: "15"
+      - key: AUTO_POST
+        value: "1"
+      - key: AUTO_INTERVAL_MINUTES
+        value: "120"
+      - key: POSTS_PER_DAY
+        value: "8"
       - key: LLM_MODEL
         value: grok-4.6
       - key: VIDEO_MODEL

@@ -69,7 +69,7 @@ def prepare_reel(src: Path) -> Path:
         "-movflags",
         "+faststart",
         "-t",
-        "15",
+        "15",  # Reels length locked to 15s
         str(dest),
     ]
     r = _run(cmd)

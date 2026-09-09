@@ -25,10 +25,13 @@ XAI_BASE = "https://api.x.ai/v1"
 LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
 VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
-VIDEO_DURATION = int(os.getenv("VIDEO_DURATION", "10"))
+VIDEO_DURATION = 15
 VIDEO_RESOLUTION = os.getenv("VIDEO_RESOLUTION", "480p").strip()
 VIDEO_ASPECT = "9:16"
 VOICE_ID = os.getenv("VOICE_ID", "rex").strip()
+AUTO_POST = os.getenv("AUTO_POST", "1").strip() not in {"0", "false", "no"}
+AUTO_INTERVAL_MINUTES = int(os.getenv("AUTO_INTERVAL_MINUTES", "120"))
+POSTS_PER_DAY = int(os.getenv("POSTS_PER_DAY", "8"))
 
 IG_USERNAME = os.getenv("IG_USERNAME", "").strip()
 IG_PASSWORD = os.getenv("IG_PASSWORD", "").strip()
@@ -43,6 +46,7 @@ def reload_env() -> None:
     load_dotenv(ENV_FILE, override=True)
     global BOT_TOKEN, ADMIN_USER_IDS, XAI_API_KEY, LLM_MODEL, IMAGE_MODEL
     global VIDEO_MODEL, VIDEO_DURATION, VIDEO_RESOLUTION, VOICE_ID
+    global AUTO_POST, AUTO_INTERVAL_MINUTES, POSTS_PER_DAY
     global IG_USERNAME, IG_PASSWORD, WEBHOOK_URL, WEBHOOK_PATH, WEBAPP_HOST, WEBAPP_PORT
     BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
     ADMIN_USER_IDS = {
@@ -52,9 +56,12 @@ def reload_env() -> None:
     LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
     IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
     VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
-    VIDEO_DURATION = int(os.getenv("VIDEO_DURATION", "10"))
+    VIDEO_DURATION = 15
     VIDEO_RESOLUTION = os.getenv("VIDEO_RESOLUTION", "480p").strip()
     VOICE_ID = os.getenv("VOICE_ID", "rex").strip()
+    AUTO_POST = os.getenv("AUTO_POST", "1").strip() not in {"0", "false", "no"}
+    AUTO_INTERVAL_MINUTES = int(os.getenv("AUTO_INTERVAL_MINUTES", "120"))
+    POSTS_PER_DAY = int(os.getenv("POSTS_PER_DAY", "8"))
     IG_USERNAME = os.getenv("IG_USERNAME", "").strip()
     IG_PASSWORD = os.getenv("IG_PASSWORD", "").strip()
     WEBHOOK_URL = (os.getenv("WEBHOOK_URL") or os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")

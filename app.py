@@ -41,6 +41,11 @@ async def on_startup(_app: web.Application) -> None:
     url = base + config.WEBHOOK_PATH
     await bot.set_webhook(url=url, allowed_updates=dp.resolve_used_update_types())
     logger.info("webhook set %s", url)
+    if config.AUTO_POST:
+        from worker import auto_loop
+
+        asyncio.create_task(auto_loop(bot))
+        logger.info("auto-pilot started")
 
 
 async def on_cleanup(_app: web.Application) -> None:

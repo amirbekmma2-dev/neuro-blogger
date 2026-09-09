@@ -4,10 +4,10 @@ Telegram-бот: Grok пишет сценарий на **o'zbek** (sport ovqat) 
 
 Пульт: `@Traning_with_Albert_bot`.
 
-```bash
-cd ~/neuro-blogger
-./ctl.sh start
-./ctl.sh logs
-```
+**24/7:** https://neuro-blogger.onrender.com (Render free + webhook). Локальный `ctl.sh start` не гонять — конфликт с webhook.
 
-Grok: сессия grok.com (`~/.grok/auth.json`) или `XAI_API_KEY`. В ленту само не публикует — только после ✅.
+Avtopilot: 15s o'zbek reels, o'zi yozadi va Instagramga chiqaradi (kuniga 8 tagacha, ~2 soatda bir).
+
+UptimeRobot: HTTP каждые 5 мин на `https://neuro-blogger.onrender.com/health`.
+
+Grok: сессия grok.com или `XAI_API_KEY`. В ленту само не публикует — только после ✅.

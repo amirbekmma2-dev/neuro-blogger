@@ -107,8 +107,9 @@ def setup_text() -> str:
         f"Grok: {grok}",
         f"Instagram: {ig}",
         f"Лицо персонажа: {face}",
-        f"Качество: {VIDEO_RESOLUTION}",
-        f"Сейчас занят: {'да' if is_busy() else 'нет'}",
+        f"Sifat: {VIDEO_RESOLUTION} · 15s · o'zbek",
+        f"Avtopilot: {'yoqilgan' if config.AUTO_POST else 'off'}",
+        f"Hozir band: {'ha' if is_busy() else 'yoq'}",
     ]
     if gaps:
         lines += ["", "Не хватает: " + ", ".join(gaps)]
@@ -118,7 +119,7 @@ def setup_text() -> str:
                 "Grok login qil yoki ⚙️ ga XAI_API_KEY qo'y.",
             ]
     else:
-        lines += ["", "🎬 Сгенерировать. Лентага faqat ✅ dan keyin ketadi."]
+        lines += ["", "Avtopilot o'zi yozadi va Instagramga chiqaradi. 🎬 — qo'shimcha reel."]
     return "\n".join(lines)
 
 
@@ -453,6 +454,10 @@ async def main() -> None:
     await bot.delete_webhook(drop_pending_updates=True)
     me = await bot.get_me()
     logger.info("neuro-blogger @%s polling", me.username)
+    if config.AUTO_POST:
+        from worker import auto_loop
+
+        asyncio.create_task(auto_loop(bot))
     await dp.start_polling(bot)
 
 

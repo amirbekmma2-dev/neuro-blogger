@@ -1,9 +1,9 @@
 {
   "name": "Motiv",
   "ig_handle": "motivstile.ai",
-  "niche": "sport ovqatlanish: protein, kreatin, osh vs chicken, zal oldidan ovqat, arzon mahsulotlar Toshkentda",
+  "niche": "sport ovqatlanish: protein, kreatin, palov vs chicken, zal oldidan ovqat, arzon mahsulotlar Toshkentda",
   "language": "uz",
-  "tone": "ko'cha uslubi, o'tkir, hazil bilan, suvsiz, 1-soniyada ushlaydi, bahslashishga undaydi",
+  "tone": "ko'cha uslubi, o'tkir, hazil, 1-soniyada ushlaydi, bahslashishga undaydi",
   "audience": "O'zbekiston, 16-30 yosh, zalga chiqadigan yigitlar, Toshkent/Samarqand/Andijon",
   "character_prompt": "Photorealistic vertical 9:16 cinematic portrait of a young Uzbek man, about 23, short dark hair, athletic, holding a protein shaker in a bright Tashkent apartment kitchen with chicken and rice on the counter, natural window light, street-smart confident look into camera, no text, no watermark, no logo",
   "hashtags": [
@@ -18,7 +18,7 @@
     "#gym",
     "#motivstileai",
     "#dieta",
-    "#massagosh"
+    "#reelsuz"
   ],
   "cta": "Saqla. To'g'rimi? Kommentga yoz.",
   "voice_id": "rex",
@@ -32,6 +32,11 @@
     "Somsa + choyxona vs meal prep: qayerda oqsilsiz qolasan",
     "1 banka energetik = 1 soat zalni yo'q qilish",
     "Suv ichmasdan kreatin — shishasan, o'smaysan",
-    "Kechni 3 ta nonushta o'rniga bitta to'g'ri kechki ovqat"
+    "Kechqurun 3 ta non o'rniga bitta to'g'ri kechki ovqat",
+    "Oshxona yog'ida tovuq qovurish — kaloriya yashirin",
+    "Bozordagi arzon tuxum vs qimmat 'fit' mahsulot",
+    "Choyxonada lag'mon + cola = zalni nolgacha",
+    "Uyqusiz 5 soat + kofe: muskul o'smaydi",
+    "Zalda 2 soat yurib, kechasi chips — o'sha 2 soat yo'q"
   ]
 }

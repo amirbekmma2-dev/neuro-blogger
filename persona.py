@@ -36,6 +36,9 @@ DEFAULT = {
         "6 ta tuxum ertalab: afsona vs haqiqat",
         "Kreatin buyrakni buzadi degan yolg'on",
         "Arzon tovuq + guruch = eng qimmat sportpit emas",
+        "Zaldan keyin 2 soat och yurish — muskullarni yeysan",
+        "Somsa + choyxona vs meal prep",
+        "1 banka energetik = 1 soat zalni yo'q qilish",
     ],
 }
 
