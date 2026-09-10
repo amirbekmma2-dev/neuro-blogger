@@ -10,8 +10,15 @@ from config import VIDEO_TOTAL_DURATION
 logger = logging.getLogger(__name__)
 
 
-def _run(cmd: list[str]) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, capture_output=True, text=True, check=False)
+def _run(cmd: list[str], timeout: int = 180) -> subprocess.CompletedProcess:
+    logger.info("ffmpeg %s", " ".join(cmd[:14]))
+    try:
+        return subprocess.run(
+            cmd, capture_output=True, text=True, check=False, timeout=timeout
+        )
+    except subprocess.TimeoutExpired as exc:
+        logger.error("ffmpeg timeout %ss", timeout)
+        raise RuntimeError(f"ffmpeg timeout {timeout}s") from exc
 
 
 def has_ffmpeg() -> bool:
@@ -60,7 +67,7 @@ def _encode_args() -> list[str]:
         "-c:v",
         "libx264",
         "-preset",
-        "fast",
+        "veryfast",
         "-profile:v",
         "high",
         "-level",
@@ -135,6 +142,7 @@ def _with_audio(src: Path) -> Path:
 def concat_videos(parts: list[Path], dest: Path) -> Path:
     if not has_ffmpeg():
         raise RuntimeError("ffmpeg yo'q")
+    logger.info("concat start %s", [p.name for p in parts])
     parts = [_with_audio(p) for p in parts]
     if len(parts) == 1:
         shutil.copyfile(parts[0], dest)
