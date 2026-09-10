@@ -125,7 +125,7 @@ async def auto_loop(bot: Bot) -> None:
         )
         await bot.send_message(
             chat,
-            "Avtopilot yoqildi: 30s o'zbek sayohat, professional akaunt.\n"
+            "Avtopilot yoqildi: 60s o'zbek sayohat, yuz o'zgarmaydi.\n"
             f"Toshkent peak: {slot_txt}\n"
             f"{line}\n"
             f"Kuniga {config.POSTS_PER_DAY} ta. Tunda yozmaydi.",

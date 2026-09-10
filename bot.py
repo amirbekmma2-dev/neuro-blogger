@@ -107,7 +107,7 @@ def setup_text() -> str:
         f"Grok: {grok}",
         f"Instagram: {ig}",
         f"Лицо персонажа: {face}",
-        f"Sifat: {VIDEO_RESOLUTION} · 30s (10+10+10) · o'zbek",
+        f"Sifat: {VIDEO_RESOLUTION} · 60s (6×10, yuz qulf) · o'zbek",
         f"Avtopilot: {'yoqilgan' if config.AUTO_POST else 'off'}",
         f"Hozir band: {'ha' if is_busy() else 'yoq'}",
     ]

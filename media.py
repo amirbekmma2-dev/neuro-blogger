@@ -87,6 +87,86 @@ def _encode_args() -> list[str]:
     ]
 
 
+def extract_last_frame(src: Path, dest: Path) -> Path:
+    if not has_ffmpeg():
+        raise RuntimeError("ffmpeg yo'q")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-sseof",
+        "-0.15",
+        "-i",
+        str(src),
+        "-frames:v",
+        "1",
+        "-q:v",
+        "2",
+        str(dest),
+    ]
+    r = _run(cmd, timeout=30)
+    if r.returncode != 0 or not dest.exists() or dest.stat().st_size < 500:
+        logger.error("last frame failed: %s", (r.stderr or "")[-400:])
+        raise RuntimeError("ffmpeg last frame failed")
+    logger.info("last frame %s -> %s", src.name, dest.name)
+    return dest
+
+
+def normalize_clip(src: Path, dest: Path, seconds: int = 10) -> Path:
+    """Same 9:16 30fps so later concat can stream-copy."""
+    if not has_ffmpeg():
+        raise RuntimeError("ffmpeg yo'q")
+    vf = (
+        "scale=720:1280:force_original_aspect_ratio=decrease,"
+        "pad=720:1280:(ow-iw)/2:(oh-ih)/2:black,"
+        "fps=30,format=yuv420p"
+    )
+    cmd = ["ffmpeg", "-y", "-i", str(src), "-t", str(seconds), "-vf", vf]
+    if not has_audio(src):
+        cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
+        maps = ["-map", "0:v:0", "-map", "1:a:0", "-shortest"]
+    else:
+        maps = ["-map", "0:v:0", "-map", "0:a:0?"]
+    cmd += [*maps, *_encode_args(), str(dest)]
+    r = _run(cmd, timeout=90)
+    if r.returncode != 0 or not dest.exists() or dest.stat().st_size < 1000:
+        logger.error("normalize failed: %s", (r.stderr or "")[-800:])
+        raise RuntimeError("ffmpeg normalize failed")
+    logger.info("normalize %s -> %s (%.1fs)", src.name, dest.name, duration_seconds(dest))
+    return dest
+
+
+def concat_copy(parts: list[Path], dest: Path) -> Path:
+    if len(parts) == 1:
+        shutil.copyfile(parts[0], dest)
+        return dest
+    list_file = dest.with_suffix(".concat.txt")
+    list_file.write_text(
+        "".join(f"file '{p.resolve()}'\n" for p in parts), encoding="utf-8"
+    )
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        str(list_file),
+        "-c",
+        "copy",
+        "-movflags",
+        "+faststart",
+        str(dest),
+    ]
+    r = _run(cmd, timeout=60)
+    if r.returncode != 0 or not dest.exists() or dest.stat().st_size < 1000:
+        logger.warning("concat copy failed, re-encode: %s", (r.stderr or "")[-400:])
+        return concat_videos(parts, dest)
+    logger.info("concat copy %s -> %s (%.1fs)", [p.name for p in parts], dest.name, duration_seconds(dest))
+    return dest
+
+
 def extract_last_seconds(src: Path, dest: Path, seconds: int = 10) -> Path:
     if not has_ffmpeg():
         raise RuntimeError("ffmpeg yo'q")
@@ -177,8 +257,8 @@ def prepare_reel(src: Path) -> Path:
         return src
     dest = src.with_name(src.stem + "_reel.mp4")
     vf = (
-        "scale=1080:1920:force_original_aspect_ratio=decrease,"
-        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,"
+        "scale=720:1280:force_original_aspect_ratio=decrease,"
+        "pad=720:1280:(ow-iw)/2:(oh-ih)/2:black,"
         "fps=30,format=yuv420p"
     )
     cmd = ["ffmpeg", "-y", "-i", str(src)]
@@ -196,7 +276,7 @@ def prepare_reel(src: Path) -> Path:
         str(VIDEO_TOTAL_DURATION),
         str(dest),
     ]
-    r = _run(cmd)
+    r = _run(cmd, timeout=240)
     if r.returncode != 0 or not dest.exists() or dest.stat().st_size < 1000:
         logger.error("ffmpeg failed: %s", (r.stderr or "")[-800:])
         return src

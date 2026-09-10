@@ -15,8 +15,9 @@ DEFAULT = {
     "audience": "O'zbekiston, 16-35 yosh, Reels, tarix va kelajakka qiziqadiganlar",
     "character_prompt": (
         "Photorealistic vertical 9:16 cinematic portrait of a young Uzbek man, "
-        "about 25, short dark hair, sharp eyes, wearing a dark wool coat and black beanie, "
+        "about 25, short dark hair, sharp eyes, clean-shaven, wearing a dark wool coat and black beanie, "
         "standing as a time traveler, confident look into camera, natural light, "
+        "this exact face and head are locked for every scene, "
         "no text, no watermark, no logo"
     ),
     "hashtags": [
