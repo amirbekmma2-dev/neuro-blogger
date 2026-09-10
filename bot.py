@@ -102,7 +102,7 @@ def setup_text() -> str:
     face = "есть" if CHARACTER_FILE.exists() else "нет"
     lines = [
         "Нейро-блогер @motivstile.ai",
-        "Ниша: vaqt sayohati · til: o'zbek",
+        "Ниша: vaqt sayohati · til: o'zbek · peak Toshkent",
         "",
         f"Grok: {grok}",
         f"Instagram: {ig}",

@@ -104,7 +104,71 @@ def account_info() -> dict:
     return {
         "username": info.username,
         "full_name": info.full_name,
+        "biography": getattr(info, "biography", "") or "",
         "media_count": info.media_count,
         "follower_count": getattr(info, "follower_count", None),
         "following_count": getattr(info, "following_count", None),
+        "is_private": getattr(info, "is_private", None),
     }
+
+
+PROFESSIONAL_NAME = "Motiv | Vaqt sayohati"
+PROFESSIONAL_BIO = (
+    "Vaqt mashinasi · AI sayohatchi\n"
+    "O'tmish va kelajak • har kuni 8 Reel\n"
+    "Yunoniston · Misr · SSSR · 2100\n"
+    "📍 Toshkent"
+)
+
+
+def polish_profile(avatar: Path | None = None) -> list[str]:
+    """Make the account public creator, set name/bio/avatar. Idempotent."""
+    cl = get_client()
+    notes: list[str] = []
+    try:
+        cl.account_set_public()
+        notes.append("public")
+    except Exception as exc:
+        notes.append(f"public skip: {exc}")
+        logger.warning("account_set_public: %s", exc)
+
+    try:
+        cl.account_convert_to_creator(should_show_category=True)
+        notes.append("creator")
+    except Exception as exc:
+        notes.append(f"creator skip: {exc}")
+        logger.warning("convert_to_creator: %s", exc)
+
+    info = cl.account_info()
+    old_bio = getattr(info, "biography", "") or ""
+    old_name = getattr(info, "full_name", "") or ""
+    if old_name != PROFESSIONAL_NAME or "Vaqt mashinasi" not in old_bio:
+        try:
+            cl.account_edit(full_name=PROFESSIONAL_NAME, biography=PROFESSIONAL_BIO)
+            notes.append("bio")
+        except Exception as exc:
+            notes.append(f"bio skip: {exc}")
+            logger.warning("account_edit: %s", exc)
+    else:
+        notes.append("bio ok")
+
+    first_time = "Vaqt mashinasi" not in old_bio
+    if first_time and avatar and Path(avatar).exists() and Path(avatar).stat().st_size > 1000:
+        try:
+            cl.account_change_picture(Path(avatar))
+            notes.append("avatar")
+        except Exception as exc:
+            notes.append(f"avatar skip: {exc}")
+            logger.warning("account_change_picture: %s", exc)
+    return notes
+
+
+def fetch_video_insights(limit: int = 24) -> list[dict]:
+    cl = get_client()
+    return cl.insights_media_feed_all(
+        post_type="VIDEO",
+        time_frame="THREE_MONTHS",
+        data_ordering="VIDEO_VIEW_COUNT",
+        count=limit,
+        sleep=1,
+    )
