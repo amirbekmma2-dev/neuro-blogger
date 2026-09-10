@@ -32,7 +32,7 @@ def _now() -> str:
 async def init_db() -> None:
     ensure_dirs()
     async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(SCHEMA)
+        await db.executescript(SCHEMA)
         await db.commit()
 
 
