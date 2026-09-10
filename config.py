@@ -25,7 +25,9 @@ XAI_BASE = "https://api.x.ai/v1"
 LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
 VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
-VIDEO_DURATION = 15
+VIDEO_EXTEND_MODEL = os.getenv("VIDEO_EXTEND_MODEL", "grok-imagine-video").strip()
+VIDEO_DURATION = int(os.getenv("VIDEO_DURATION", "10") or "10")
+VIDEO_TOTAL_DURATION = 30
 VIDEO_RESOLUTION = os.getenv("VIDEO_RESOLUTION", "480p").strip()
 VIDEO_ASPECT = "9:16"
 VOICE_ID = os.getenv("VOICE_ID", "rex").strip()
@@ -45,7 +47,7 @@ WEBAPP_PORT = int(os.getenv("PORT") or os.getenv("WEBAPP_PORT") or "10000")
 def reload_env() -> None:
     load_dotenv(ENV_FILE, override=True)
     global BOT_TOKEN, ADMIN_USER_IDS, XAI_API_KEY, LLM_MODEL, IMAGE_MODEL
-    global VIDEO_MODEL, VIDEO_DURATION, VIDEO_RESOLUTION, VOICE_ID
+    global VIDEO_MODEL, VIDEO_EXTEND_MODEL, VIDEO_DURATION, VIDEO_RESOLUTION, VOICE_ID
     global AUTO_POST, AUTO_INTERVAL_MINUTES, POSTS_PER_DAY
     global IG_USERNAME, IG_PASSWORD, WEBHOOK_URL, WEBHOOK_PATH, WEBAPP_HOST, WEBAPP_PORT
     BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
@@ -56,7 +58,8 @@ def reload_env() -> None:
     LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
     IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
     VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
-    VIDEO_DURATION = 15
+    VIDEO_EXTEND_MODEL = os.getenv("VIDEO_EXTEND_MODEL", "grok-imagine-video").strip()
+    VIDEO_DURATION = int(os.getenv("VIDEO_DURATION", "10") or "10")
     VIDEO_RESOLUTION = os.getenv("VIDEO_RESOLUTION", "480p").strip()
     VOICE_ID = os.getenv("VOICE_ID", "rex").strip()
     AUTO_POST = os.getenv("AUTO_POST", "1").strip() not in {"0", "false", "no"}

@@ -12,9 +12,10 @@ from db import create_post, get_post, list_posts, update_post
 from grok_api import (
     GrokError,
     ensure_character,
-    generate_video,
+    generate_thirty_second_video,
     invent_script,
     next_video_path,
+    parse_beats,
 )
 from instagram import InstagramError, post_reel, waiting_for_code
 from keyboards import preview_kb
@@ -53,7 +54,7 @@ async def run_generation(
     async with _busy:
         post_id = await create_post(topic, "generating")
         try:
-            await bot.send_message(chat_id, f"#{post_id} 15s o'zbek reel: ssenariy…")
+            await bot.send_message(chat_id, f"#{post_id} 30s sayohat reel: ssenariy…")
             script = await invent_script(topic, avoid=await _recent_ideas())
             await update_post(
                 post_id,
@@ -68,15 +69,14 @@ async def run_generation(
 
             await bot.send_message(
                 chat_id,
-                f"#{post_id} Grok video 15s {VIDEO_RESOLUTION}. Bir necha daqiqa.",
+                f"#{post_id} Grok 10s + 2× extend = 30s {VIDEO_RESOLUTION}. Bir necha daqiqa.",
             )
             raw_path = next_video_path(post_id)
             p = load_persona()
-            await generate_video(
-                script["video_prompt"],
+            await generate_thirty_second_video(
+                parse_beats(script["video_prompt"]),
                 raw_path,
                 reference_image=face,
-                duration=15,
                 voice_id=p.get("voice_id") or VOICE_ID,
             )
 
@@ -153,15 +153,14 @@ async def regenerate_video(bot: Bot, chat_id: int, post_id: int) -> None:
     async with _busy:
         try:
             await update_post(post_id, status="generating")
-            await bot.send_message(chat_id, f"#{post_id} yangi 15s dublyaj…")
+            await bot.send_message(chat_id, f"#{post_id} yangi 30s dublyaj…")
             face = CHARACTER_FILE if CHARACTER_FILE.exists() else await ensure_character()
             raw_path = next_video_path(post_id)
             p = load_persona()
-            await generate_video(
-                post["video_prompt"] or "",
+            await generate_thirty_second_video(
+                parse_beats(post["video_prompt"] or ""),
                 raw_path,
                 reference_image=face,
-                duration=15,
                 voice_id=p.get("voice_id") or VOICE_ID,
             )
             reel = await asyncio.to_thread(prepare_reel, raw_path)

@@ -6,39 +6,46 @@ from config import PERSONA_FILE
 DEFAULT = {
     "name": "Motiv",
     "ig_handle": "motivstile.ai",
-    "niche": "sport ovqatlanish: protein, kreatin, osh vs chicken, zal oldidan ovqat",
+    "niche": (
+        "vaqt sayohati: o'tmish (Yunoniston, Misr, SSSR, Toshkent 2000) "
+        "va kelajak (Toshkent 2100, Mars) — agent o'zi davrni tanlaydi"
+    ),
     "language": "uz",
-    "tone": "ko'cha uslubi, o'tkir, hazil bilan, suvsiz, 1-soniyada ushlaydi",
-    "audience": "O'zbekiston, 16-30 yosh, zalga chiqadigan yigitlar",
+    "tone": "ko'cha uslubi, hayrat, hazil, 1-soniyada ushlaydi, suvsiz",
+    "audience": "O'zbekiston, 16-35 yosh, Reels, tarix va kelajakka qiziqadiganlar",
     "character_prompt": (
         "Photorealistic vertical 9:16 cinematic portrait of a young Uzbek man, "
-        "about 23, short dark hair, athletic, holding a protein shaker in a bright "
-        "Tashkent apartment kitchen with chicken and rice on the counter, natural "
-        "window light, street-smart confident look into camera, no text, no watermark, no logo"
+        "about 25, short dark hair, sharp eyes, wearing a dark wool coat and black beanie, "
+        "standing as a time traveler, confident look into camera, natural light, "
+        "no text, no watermark, no logo"
     ),
     "hashtags": [
-        "#sportovqat",
-        "#protein",
-        "#fitnes",
-        "#ozbekiston",
+        "#sayohat",
+        "#tarix",
+        "#kelajak",
         "#toshkent",
-        "#zal",
-        "#kreatin",
-        "#sportpitanie",
-        "#gym",
+        "#ozbekiston",
+        "#retro",
+        "#sssr",
         "#motivstileai",
+        "#reelsuz",
+        "#vaqtsayohati",
     ],
-    "cta": "Saqla. To'g'rimi? Kommentga yoz.",
+    "cta": "Saqla. Keyin qayerga uchay? Kommentga yoz.",
     "voice_id": "rex",
     "viral_topics": [
-        "Palov yeb zalga chiqasan — shuning uchun qorin ketmaydi",
-        "Protein shakerni suv o'rniga sut bilan ichish — pulni yoqish",
-        "6 ta tuxum ertalab: afsona vs haqiqat",
-        "Kreatin buyrakni buzadi degan yolg'on",
-        "Arzon tovuq + guruch = eng qimmat sportpit emas",
-        "Zaldan keyin 2 soat och yurish — muskullarni yeysan",
-        "Somsa + choyxona vs meal prep",
-        "1 banka energetik = 1 soat zalni yo'q qilish",
+        "Qadimgi Yunoniston: Afina bozori va olimpiada",
+        "Qadimgi Misr: ehram oldida qum va fir'avn",
+        "SSSR Toshkent 1980: tramvay, palto, qor",
+        "Toshkent 2000: Abdulla Qahhor ko'chasi, qish",
+        "Samarqand Ipak yo'li: Registon, karvon",
+        "Buxoro o'rta asr: madrasa va choyxona",
+        "Rim kolizey: gladiator changi",
+        "Toshkent 2100: neon, uchuvchi taksi",
+        "Mars koloniyasi: qizil qum, o'zbek bayrog'i",
+        "Kelajak bozori: robot somsa pishiradi",
+        "Chingizxon stepi: ot va bayroq",
+        "Atlantida: suv osti shahar",
     ],
 }
 

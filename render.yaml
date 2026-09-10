@@ -27,7 +27,9 @@ services:
       - key: VIDEO_RESOLUTION
         value: "480p"
       - key: VIDEO_DURATION
-        value: "15"
+        value: "10"
+      - key: VIDEO_EXTEND_MODEL
+        value: grok-imagine-video
       - key: AUTO_POST
         value: "1"
       - key: AUTO_INTERVAL_MINUTES

@@ -22,14 +22,14 @@ async def auto_loop(bot: Bot) -> None:
     await asyncio.sleep(40)
     chat = _admin_chat()
     logger.info(
-        "auto loop on: every %s min, max %s/day, 15s uzbek",
+        "auto loop on: every %s min, max %s/day, 30s uzbek sayohat",
         config.AUTO_INTERVAL_MINUTES,
         config.POSTS_PER_DAY,
     )
     try:
         await bot.send_message(
             chat,
-            "Avtopilot yoqildi: 15s o'zbek reels, o'zi yozadi va Instagramga chiqaradi. "
+            "Avtopilot yoqildi: 30s o'zbek sayohat (10+10+10), o'tmish va kelajak, o'zi yozadi va Instagramga chiqaradi. "
             f"Kuniga {config.POSTS_PER_DAY} ta, ~{config.AUTO_INTERVAL_MINUTES} daqiqada bir.",
         )
     except Exception:
