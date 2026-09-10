@@ -63,7 +63,11 @@ def get_client() -> Client:
     if SESSION_FILE.exists():
         try:
             cl.load_settings(SESSION_FILE)
-            cl.login(user, password)
+            sid = (cl.sessionid or "").strip() or (cl.settings.get("authorization_data") or {}).get("sessionid")
+            if sid:
+                cl.login_by_sessionid(sid)
+            else:
+                cl.login(user, password)
             cl.get_timeline_feed()
             logger.info("instagram session ok")
             return cl
