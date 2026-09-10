@@ -166,7 +166,7 @@ async def invent_script(topic: str | None = None, avoid: list[str] | None = None
         "Faqat JSON qaytar, markdown yo'q. "
         "Og'zaki nutq va caption — FAQAT o'zbek tili, lotin alifbosi (o' / g'). "
         "Ruscha gap YO'Q. Inglizcha faqat era va setting maydonlarida. "
-        "Video 60 soniya: 6 ta 10 soniyalik beat, BIR davr, BIR odam. "
+        "Video 30 soniya: 3 ta 10 soniyalik beat, BIR davr, BIR odam. "
         "Davrni O'ZING tanla — ba'zan o'tmish, ba'zan kelajak."
     )
     user = f"""Akaunt: @{p.get('ig_handle')}  personaj: {p.get('name')} — vaqt sayohatchisi
@@ -181,7 +181,7 @@ Oxirgi chiqqanlar (takrorlama):
 {skip or "- yo'q"}
 Berilgan mavzu: {chosen}
 
-60 soniyalik Reels, 6 beat x 10s. Suv yo'q. Bir davr. Yuz o'zgarmaydi.
+30 soniyalik Reels, 3 beat x 10s. Suv yo'q. Bir davr. Yuz o'zgarmaydi.
 
 JSON:
 {{
@@ -190,11 +190,8 @@ JSON:
   "era": "English, 6-10 words, place and year",
   "setting": "English visual setting, one sentence, no people description",
   "spoken1": "0-10s hook, ~18-28 so'z",
-  "spoken2": "10-20s yetib kelish, ~18-28 so'z",
-  "spoken3": "20-30s yurish, ~18-28 so'z",
-  "spoken4": "30-40s detal, ~18-28 so'z",
-  "spoken5": "40-50s twist, ~18-28 so'z",
-  "spoken6": "50-60s CTA kameraga, ~18-28 so'z",
+  "spoken2": "10-20s dunyo ichida, ~18-28 so'z",
+  "spoken3": "20-30s twist + CTA kameraga, ~18-28 so'z",
   "caption": "o'zbekcha 2-4 qisqa gap + CTA + hashtaglar, lotin"
 }}
 """
@@ -398,7 +395,7 @@ async def generate_reel_video(
     reference_image: Path | None = None,
     voice_id: str | None = None,
 ) -> Path:
-    """60s = 6×10s. Each shot after the first starts on the previous last frame
+    """30s = 3×10s. Each shot after the first starts on the previous last frame
     and keeps the same character portrait so the head does not recast."""
     from media import concat_copy, duration_seconds, extract_last_frame, normalize_clip
 

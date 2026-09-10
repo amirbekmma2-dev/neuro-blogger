@@ -69,7 +69,7 @@ async def run_generation(
 
             await bot.send_message(
                 chat_id,
-                f"#{post_id} Grok 6×10s = {VIDEO_TOTAL_DURATION}s {VIDEO_RESOLUTION}, yuz qulflangan. Bir necha daqiqa.",
+                f"#{post_id} Grok 3×10s = {VIDEO_TOTAL_DURATION}s {VIDEO_RESOLUTION}, yuz qulflangan. Bir necha daqiqa.",
             )
             raw_path = next_video_path(post_id)
             p = load_persona()
