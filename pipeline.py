@@ -32,7 +32,7 @@ def is_busy() -> bool:
 
 
 async def _recent_ideas() -> list[str]:
-    rows = await list_posts(16)
+    rows = await list_posts(40)
     out = []
     for p in rows:
         if p.get("idea"):
@@ -46,15 +46,22 @@ async def run_generation(
     topic: str | None = None,
     *,
     auto_publish: bool | None = None,
+    scheduled_for: str | None = None,
 ) -> int | None:
     publish = AUTO_POST if auto_publish is None else auto_publish
     if _busy.locked():
         await bot.send_message(chat_id, "Allaqachon boshqa reel yasayapman.")
         return None
     async with _busy:
-        post_id = await create_post(topic, "generating")
+        post_id = await create_post(topic, "generating", scheduled_for=scheduled_for)
         try:
-            await bot.send_message(chat_id, f"#{post_id} {VIDEO_TOTAL_DURATION}s sayohat reel: ssenariy…")
+            when = ""
+            if scheduled_for:
+                when = f" (chiqish {scheduled_for[11:16] if len(scheduled_for) >= 16 else scheduled_for})"
+            await bot.send_message(
+                chat_id,
+                f"#{post_id} {VIDEO_TOTAL_DURATION}s 9:16 sayohat reel{when}: ssenariy…",
+            )
             script = await invent_script(topic, avoid=await _recent_ideas())
             await update_post(
                 post_id,
@@ -69,7 +76,7 @@ async def run_generation(
 
             await bot.send_message(
                 chat_id,
-                f"#{post_id} Grok 3×10s = {VIDEO_TOTAL_DURATION}s {VIDEO_RESOLUTION}, yuz qulflangan. Bir necha daqiqa.",
+                f"#{post_id} Grok 3×10s = {VIDEO_TOTAL_DURATION}s 9:16 {VIDEO_RESOLUTION}, yuz qulflangan.",
             )
             raw_path = next_video_path(post_id)
             p = load_persona()
@@ -85,7 +92,12 @@ async def run_generation(
             await update_post(post_id, video_path=str(reel), status="ready")
 
             note = script["caption"]
-            extra = "Avtonom: hozir Instagramga chiqaman." if publish else "Tekshirib ✅ bos."
+            if publish:
+                extra = "Avtonom: hozir Instagramga chiqaman."
+            elif scheduled_for:
+                extra = f"Tayyor. Instagramga {scheduled_for[11:16] if len(scheduled_for) >= 16 else scheduled_for} da chiqadi."
+            else:
+                extra = "Tekshirib ✅ bos."
             await bot.send_video(
                 chat_id,
                 video=FSInputFile(reel),

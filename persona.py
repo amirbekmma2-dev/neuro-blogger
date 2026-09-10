@@ -47,6 +47,14 @@ DEFAULT = {
         "Kelajak bozori: robot somsa pishiradi",
         "Chingizxon stepi: ot va bayroq",
         "Atlantida: suv osti shahar",
+        "Yaponiya 1600: samuray va gilos",
+        "Toshkent metro 1977: birinchi poyezd",
+        "Parij 1889: Eyfel minora qurilishi",
+        "Xorazm qadim: qal'a va cho'l shamoli",
+        "2050 Toshkent: yomg'ir ostida neon choyxona",
+        "Qadimgi Xitoy: ipak va ajdaho festivali",
+        "Nukus 1995: savdo rastasi, kassetalar",
+        "Oy stansiyasi 2140: o'zbek oshxonasi",
     ],
 }
 

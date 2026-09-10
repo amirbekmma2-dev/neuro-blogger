@@ -35,6 +35,7 @@ VOICE_ID = os.getenv("VOICE_ID", "rex").strip()
 AUTO_POST = os.getenv("AUTO_POST", "1").strip() not in {"0", "false", "no"}
 AUTO_INTERVAL_MINUTES = int(os.getenv("AUTO_INTERVAL_MINUTES", "120"))
 POSTS_PER_DAY = int(os.getenv("POSTS_PER_DAY", "8"))
+PREP_MINUTES = int(os.getenv("PREP_MINUTES", "30") or "30")
 
 IG_USERNAME = os.getenv("IG_USERNAME", "").strip()
 IG_PASSWORD = os.getenv("IG_PASSWORD", "").strip()
@@ -49,7 +50,7 @@ def reload_env() -> None:
     load_dotenv(ENV_FILE, override=True)
     global BOT_TOKEN, ADMIN_USER_IDS, XAI_API_KEY, LLM_MODEL, IMAGE_MODEL
     global VIDEO_MODEL, VIDEO_EXTEND_MODEL, VIDEO_DURATION, VIDEO_RESOLUTION, VOICE_ID
-    global AUTO_POST, AUTO_INTERVAL_MINUTES, POSTS_PER_DAY
+    global AUTO_POST, AUTO_INTERVAL_MINUTES, POSTS_PER_DAY, PREP_MINUTES
     global IG_USERNAME, IG_PASSWORD, WEBHOOK_URL, WEBHOOK_PATH, WEBAPP_HOST, WEBAPP_PORT
     BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
     ADMIN_USER_IDS = {
@@ -66,6 +67,7 @@ def reload_env() -> None:
     AUTO_POST = os.getenv("AUTO_POST", "1").strip() not in {"0", "false", "no"}
     AUTO_INTERVAL_MINUTES = int(os.getenv("AUTO_INTERVAL_MINUTES", "120"))
     POSTS_PER_DAY = int(os.getenv("POSTS_PER_DAY", "8"))
+    PREP_MINUTES = int(os.getenv("PREP_MINUTES", "30") or "30")
     IG_USERNAME = os.getenv("IG_USERNAME", "").strip()
     IG_PASSWORD = os.getenv("IG_PASSWORD", "").strip()
     WEBHOOK_URL = (os.getenv("WEBHOOK_URL") or os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")

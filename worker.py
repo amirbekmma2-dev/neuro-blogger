@@ -2,21 +2,22 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from aiogram import Bot
 
 import config
-from db import counts, kv_get, kv_set
-from pipeline import is_busy, run_generation
+from db import counts, kv_get, kv_set, next_ready_post, slot_already_handled
+from pipeline import is_busy, publish_post, run_generation
 from schedule import (
     TASHKENT,
-    due_slot,
     format_slots,
+    late_slot,
     hours_from_insights,
     next_slot,
     now_tashkent,
     parse_slots,
+    prep_slot,
     slots_to_str,
 )
 
@@ -89,17 +90,6 @@ async def _polish_once(bot: Bot, chat: int) -> None:
             pass
 
 
-def _already_posted_slot(stats: dict, due) -> bool:
-    raw = stats.get("last_posted_at")
-    if not raw:
-        return False
-    try:
-        last = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return last.astimezone(TASHKENT) >= due
-
-
 async def auto_loop(bot: Bot) -> None:
     await asyncio.sleep(8)
     chat = _admin_chat()
@@ -109,26 +99,21 @@ async def auto_loop(bot: Bot) -> None:
     learned = await _learned_slots()
     due = due_slot(learned=learned)
     nxt = due or next_slot(learned=learned)
+    lead = int(getattr(config, "PREP_MINUTES", 30) or 30)
     logger.info(
-        "auto loop on: %s/day, due %s next %s Tashkent, slots %s",
+        "auto loop on: %s/day, prep -%s min, next %s Tashkent",
         config.POSTS_PER_DAY,
-        due.strftime("%H:%M") if due else "-",
+        lead,
         nxt.astimezone(TASHKENT).strftime("%H:%M"),
-        format_slots(learned) if learned else "research-default",
     )
     try:
-        slot_txt = format_slots(learned) if learned else "07:40 09:10 12:20 14:40 17:20 19:00 20:30 22:10"
-        line = (
-            f"Hozirgi slot: {due.strftime('%d.%m %H:%M')} — hozir yozaman."
-            if due
-            else f"Keyingi post: {nxt.astimezone(TASHKENT).strftime('%d.%m %H:%M')} (Toshkent)"
-        )
+        slot_txt = format_slots(learned) if learned else "07:40 09:10 12:20 14:40 17:20 19:00 20:30 22:00"
         await bot.send_message(
             chat,
-            "Avtopilot yoqildi: 30s o'zbek sayohat, yuz o'zgarmaydi.\n"
-            f"Toshkent peak: {slot_txt}\n"
-            f"{line}\n"
-            f"Kuniga {config.POSTS_PER_DAY} ta. Tunda yozmaydi.",
+            "Avtopilot 24/7: 8 ta 30s 9:16 sayohat Reel/kun.\n"
+            f"Toshkent: {slot_txt}\n"
+            f"Video slotdan {lead} daqiqa oldin tayyor, chiqish aniq vaqtda.\n"
+            f"Keyingi: {nxt.astimezone(TASHKENT).strftime('%d.%m %H:%M')}",
         )
     except Exception:
         logger.exception("auto hello")
@@ -140,30 +125,70 @@ async def auto_loop(bot: Bot) -> None:
                 await asyncio.sleep(30)
                 continue
             stats = await counts()
+            lead = int(getattr(config, "PREP_MINUTES", 30) or 30)
             if stats.get("posted_today", 0) >= config.POSTS_PER_DAY:
                 logger.info("daily cap reached")
                 learned = await _refresh_algorithm()
                 end = now_tashkent().replace(hour=23, minute=59, second=0, microsecond=0)
                 tomorrow = next_slot(learned=learned, after=end)
-                await _sleep_until(tomorrow.astimezone(timezone.utc))
+                prep_at = tomorrow - timedelta(minutes=lead)
+                await _sleep_until(prep_at.astimezone(timezone.utc))
                 continue
             if is_busy():
                 await asyncio.sleep(20)
                 continue
             learned = await _learned_slots()
-            due = due_slot(learned=learned)
-            if due is None:
-                nxt = next_slot(learned=learned)
-                logger.info("sleep until peak %s", nxt.isoformat())
-                await _sleep_until(nxt.astimezone(timezone.utc))
+            now = now_tashkent()
+
+            ready = await next_ready_post()
+            if ready and ready.get("scheduled_for"):
+                try:
+                    slot = datetime.fromisoformat(str(ready["scheduled_for"]).replace("Z", "+00:00"))
+                    if slot.tzinfo is None:
+                        slot = slot.replace(tzinfo=TASHKENT)
+                    slot = slot.astimezone(TASHKENT)
+                except ValueError:
+                    slot = now
+                if now < slot:
+                    logger.info("ready #%s, wait until %s", ready["id"], slot.isoformat())
+                    await _sleep_until(slot.astimezone(timezone.utc))
+                    continue
+                logger.info("publish #%s slot %s", ready["id"], slot.strftime("%H:%M"))
+                await publish_post(bot, chat, int(ready["id"]))
+                await asyncio.sleep(5)
                 continue
-            if _already_posted_slot(stats, due):
-                nxt = next_slot(learned=learned, after=due)
-                logger.info("slot %s already posted, sleep until %s", due.isoformat(), nxt.isoformat())
-                await _sleep_until(nxt.astimezone(timezone.utc))
+
+            late = late_slot(learned=learned, now=now, grace_min=45)
+            if late is not None and not await slot_already_handled(late.isoformat()):
+                logger.info("late catch-up %s", late.strftime("%H:%M"))
+                await run_generation(
+                    bot,
+                    chat,
+                    None,
+                    auto_publish=True,
+                    scheduled_for=late.isoformat(),
+                )
+                await asyncio.sleep(5)
                 continue
-            logger.info("auto cycle peak %s", due.isoformat())
-            await run_generation(bot, chat, None, auto_publish=True)
+
+            prep = prep_slot(learned=learned, now=now, lead_min=lead)
+            if prep is not None:
+                key = prep.isoformat()
+                if await slot_already_handled(key):
+                    logger.info("prep slot %s already has reel, wait publish", prep.strftime("%H:%M"))
+                    await _sleep_until(prep.astimezone(timezone.utc))
+                    continue
+                logger.info("prep %s (post at %s)", now.strftime("%H:%M"), prep.strftime("%H:%M"))
+                await run_generation(
+                    bot, chat, None, auto_publish=False, scheduled_for=key
+                )
+                await asyncio.sleep(5)
+                continue
+
+            nxt = next_slot(learned=learned, after=now)
+            prep_at = nxt - timedelta(minutes=lead)
+            logger.info("sleep until prep %s for slot %s", prep_at.isoformat(), nxt.strftime("%H:%M"))
+            await _sleep_until(prep_at.astimezone(timezone.utc))
         except Exception:
             logger.exception("auto cycle failed")
             try:
@@ -171,5 +196,3 @@ async def auto_loop(bot: Bot) -> None:
             except Exception:
                 pass
             await asyncio.sleep(10 * 60)
-            continue
-        await asyncio.sleep(90)

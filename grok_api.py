@@ -144,7 +144,7 @@ def _beat_visual(n: int, spoken: str, era: str, setting: str) -> str:
         action = "Seamless continue from the previous last frame. Walk deeper, one clear camera move."
     line = spoken.strip().strip('"')
     return (
-        f"Photorealistic vertical 9:16, {era}. {setting}. "
+        f"Photorealistic vertical 9:16 Instagram Reels, {era}. {setting}. "
         f"The person from <IMAGE_0> is the only human. {action} "
         f'They speak fluent conversational Uzbek saying exactly: "{line}". '
         f"Voice from <AUDIO_0>. {FACE_LOCK} No on-screen text, no subtitles, no logos, no watermark."
@@ -156,7 +156,7 @@ async def invent_script(topic: str | None = None, avoid: list[str] | None = None
     tags = " ".join(p.get("hashtags") or [])
     bank = p.get("viral_topics") or []
     bank_txt = "\n".join(f"- {t}" for t in bank)
-    skip = "\n".join(f"- {x}" for x in (avoid or [])[:12])
+    skip = "\n".join(f"- {x}" for x in (avoid or [])[:40])
     chosen = topic or (
         "o'zing yangi davrni tanla: o'tmish YOKI kelajak "
         "(Yunoniston, Misr, SSSR, Toshkent 2000, Toshkent 2100, Mars…). takrorlama"
@@ -166,7 +166,9 @@ async def invent_script(topic: str | None = None, avoid: list[str] | None = None
         "Faqat JSON qaytar, markdown yo'q. "
         "Og'zaki nutq va caption — FAQAT o'zbek tili, lotin alifbosi (o' / g'). "
         "Ruscha gap YO'Q. Inglizcha faqat era va setting maydonlarida. "
-        "Video 30 soniya: 3 ta 10 soniyalik beat, BIR davr, BIR odam. "
+        "Video 30 soniya, FAQAT Instagram Reels 9:16 vertical. "
+        "3 ta 10 soniyalik beat, BIR davr, BIR odam. "
+        "Har safar YANGI davr va yangi detal — takrorlama. "
         "Davrni O'ZING tanla — ba'zan o'tmish, ba'zan kelajak."
     )
     user = f"""Akaunt: @{p.get('ig_handle')}  personaj: {p.get('name')} — vaqt sayohatchisi
@@ -181,7 +183,7 @@ Oxirgi chiqqanlar (takrorlama):
 {skip or "- yo'q"}
 Berilgan mavzu: {chosen}
 
-30 soniyalik Reels, 3 beat x 10s. Suv yo'q. Bir davr. Yuz o'zgarmaydi.
+30 soniyalik Instagram Reels 9:16, 3 beat x 10s. Suv yo'q. Bir davr. Yuz o'zgarmaydi. Har kuni 8 xil qiziq sayohat.
 
 JSON:
 {{

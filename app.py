@@ -18,21 +18,25 @@ logger = logging.getLogger("neuro")
 async def health_handler(_request: web.Request) -> web.Response:
     payload = {"ok": True, "auto_post": bool(config.AUTO_POST)}
     try:
-        from db import counts
+        from db import counts, next_ready_post
         from pipeline import is_busy
-        from schedule import due_slot, next_slot, now_tashkent
+        from schedule import next_slot, now_tashkent, prep_slot
 
         now = now_tashkent()
-        due = due_slot()
         nxt = next_slot()
+        lead = int(getattr(config, "PREP_MINUTES", 30) or 30)
+        prep = prep_slot(lead_min=lead)
+        ready = await next_ready_post()
         stats = await counts()
         payload.update(
             {
                 "busy": is_busy(),
                 "now": now.strftime("%Y-%m-%d %H:%M"),
-                "due": due.strftime("%H:%M") if due else None,
+                "prep": prep.strftime("%H:%M") if prep else None,
                 "next": nxt.strftime("%H:%M"),
+                "ready": ready.get("id") if ready else None,
                 "posted_today": stats.get("posted_today", 0),
+                "per_day": config.POSTS_PER_DAY,
             }
         )
     except Exception as exc:

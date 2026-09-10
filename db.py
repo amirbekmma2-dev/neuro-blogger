@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS posts (
     caption TEXT,
     video_path TEXT,
     ig_media_id TEXT,
-    error TEXT
+    error TEXT,
+    scheduled_for TEXT
 );
 CREATE TABLE IF NOT EXISTS kv (
     k TEXT PRIMARY KEY,
@@ -33,14 +34,22 @@ async def init_db() -> None:
     ensure_dirs()
     async with aiosqlite.connect(DB_PATH) as db:
         await db.executescript(SCHEMA)
+        cur = await db.execute("PRAGMA table_info(posts)")
+        cols = {row[1] for row in await cur.fetchall()}
+        if "scheduled_for" not in cols:
+            await db.execute("ALTER TABLE posts ADD COLUMN scheduled_for TEXT")
         await db.commit()
 
 
-async def create_post(topic: str | None, status: str = "generating") -> int:
+async def create_post(
+    topic: str | None,
+    status: str = "generating",
+    scheduled_for: str | None = None,
+) -> int:
     async with aiosqlite.connect(DB_PATH) as db:
         cur = await db.execute(
-            "INSERT INTO posts (created_at, status, topic) VALUES (?, ?, ?)",
-            (_now(), status, topic),
+            "INSERT INTO posts (created_at, status, topic, scheduled_for) VALUES (?, ?, ?, ?)",
+            (_now(), status, topic, scheduled_for),
         )
         await db.commit()
         return int(cur.lastrowid)
@@ -101,6 +110,40 @@ async def counts() -> dict:
                 latest = dt
         data["last_posted_at"] = latest.isoformat() if latest else None
         return data
+
+
+async def get_ready_for_slot(slot_iso: str) -> dict | None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute(
+            "SELECT * FROM posts WHERE status='ready' AND scheduled_for=? "
+            "ORDER BY id DESC LIMIT 1",
+            (slot_iso,),
+        )
+        row = await cur.fetchone()
+        return dict(row) if row else None
+
+
+async def slot_already_handled(slot_iso: str) -> bool:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cur = await db.execute(
+            "SELECT COUNT(*) FROM posts WHERE scheduled_for=? "
+            "AND status IN ('ready', 'posted')",
+            (slot_iso,),
+        )
+        n = (await cur.fetchone())[0]
+        return int(n or 0) > 0
+
+
+async def next_ready_post() -> dict | None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute(
+            "SELECT * FROM posts WHERE status='ready' AND video_path IS NOT NULL "
+            "AND video_path != '' ORDER BY scheduled_for ASC, id ASC LIMIT 1"
+        )
+        row = await cur.fetchone()
+        return dict(row) if row else None
 
 
 def _parse_utc(stamp: str | None) -> datetime | None:

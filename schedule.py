@@ -24,7 +24,7 @@ WEEKDAY_SLOTS = [
     (17, 20),
     (19, 0),
     (20, 30),
-    (22, 10),
+    (22, 0),
 ]
 # Weekend: later morning, same evening peak
 WEEKEND_SLOTS = [
@@ -34,8 +34,8 @@ WEEKEND_SLOTS = [
     (15, 30),
     (17, 30),
     (19, 0),
-    (20, 40),
-    (22, 20),
+    (20, 30),
+    (22, 0),
 ]
 
 
@@ -75,6 +75,56 @@ def parse_slots(raw: str | None) -> list[tuple[int, int]]:
 
 def slots_to_str(slots: list[tuple[int, int]]) -> str:
     return ",".join(f"{h:02d}:{m:02d}" for h, m in slots)
+
+
+def _aware(now: datetime | None) -> datetime:
+    now = now or now_tashkent()
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=TASHKENT)
+    return now.astimezone(TASHKENT)
+
+
+def slot_at(day: datetime, hour: int, minute: int) -> datetime:
+    day = _aware(day)
+    return day.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+
+def prep_slot(
+    *,
+    learned: list[tuple[int, int]] | None = None,
+    now: datetime | None = None,
+    lead_min: int = 30,
+) -> datetime | None:
+    """Slot currently in the prep window: [slot-lead, slot).
+
+    Example: post 22:00 → prep from 21:30 so the Reel is ready on time.
+    """
+    now = _aware(now)
+    lead = timedelta(minutes=max(1, lead_min))
+    for day_offset in range(0, 2):
+        day = now + timedelta(days=day_offset)
+        for h, m in _slots_for(day, learned):
+            cand = slot_at(day, h, m)
+            start = cand - lead
+            if start <= now < cand:
+                return cand
+    return None
+
+
+def late_slot(
+    *,
+    learned: list[tuple[int, int]] | None = None,
+    now: datetime | None = None,
+    grace_min: int = 45,
+) -> datetime | None:
+    """Slot that already started, still OK to finish a late reel."""
+    now = _aware(now)
+    for h, m in _slots_for(now, learned):
+        cand = slot_at(now, h, m)
+        delta = (now - cand).total_seconds()
+        if 0 <= delta <= grace_min * 60:
+            return cand
+    return None
 
 
 def due_slot(
