@@ -89,25 +89,45 @@ async def _polish_once(bot: Bot, chat: int) -> None:
             pass
 
 
+def _already_posted_slot(stats: dict, due) -> bool:
+    raw = stats.get("last_posted_at")
+    if not raw:
+        return False
+    try:
+        last = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return last.astimezone(TASHKENT) >= due
+
+
 async def auto_loop(bot: Bot) -> None:
-    await asyncio.sleep(40)
+    await asyncio.sleep(8)
     chat = _admin_chat()
-    await _polish_once(bot, chat)
-    learned = await _refresh_algorithm()
-    nxt = next_slot(learned=learned)
+    # Never block posting on IG polish / 2FA / insights.
+    asyncio.create_task(_polish_once(bot, chat))
+    asyncio.create_task(_refresh_algorithm())
+    learned = await _learned_slots()
+    due = due_slot(learned=learned)
+    nxt = due or next_slot(learned=learned)
     logger.info(
-        "auto loop on: %s/day, next %s Tashkent, slots %s",
+        "auto loop on: %s/day, due %s next %s Tashkent, slots %s",
         config.POSTS_PER_DAY,
+        due.strftime("%H:%M") if due else "-",
         nxt.astimezone(TASHKENT).strftime("%H:%M"),
         format_slots(learned) if learned else "research-default",
     )
     try:
         slot_txt = format_slots(learned) if learned else "07:40 09:10 12:20 14:40 17:20 19:00 20:30 22:10"
+        line = (
+            f"Hozirgi slot: {due.strftime('%d.%m %H:%M')} — hozir yozaman."
+            if due
+            else f"Keyingi post: {nxt.astimezone(TASHKENT).strftime('%d.%m %H:%M')} (Toshkent)"
+        )
         await bot.send_message(
             chat,
             "Avtopilot yoqildi: 30s o'zbek sayohat, professional akaunt.\n"
             f"Toshkent peak: {slot_txt}\n"
-            f"Keyingi post: {nxt.astimezone(TASHKENT).strftime('%d.%m %H:%M')} (Toshkent)\n"
+            f"{line}\n"
             f"Kuniga {config.POSTS_PER_DAY} ta. Tunda yozmaydi.",
         )
     except Exception:
@@ -135,6 +155,11 @@ async def auto_loop(bot: Bot) -> None:
             if due is None:
                 nxt = next_slot(learned=learned)
                 logger.info("sleep until peak %s", nxt.isoformat())
+                await _sleep_until(nxt.astimezone(timezone.utc))
+                continue
+            if _already_posted_slot(stats, due):
+                nxt = next_slot(learned=learned, after=due)
+                logger.info("slot %s already posted, sleep until %s", due.isoformat(), nxt.isoformat())
                 await _sleep_until(nxt.astimezone(timezone.utc))
                 continue
             logger.info("auto cycle peak %s", due.isoformat())

@@ -16,7 +16,28 @@ logger = logging.getLogger("neuro")
 
 
 async def health_handler(_request: web.Request) -> web.Response:
-    return web.Response(status=200, text="OK")
+    payload = {"ok": True, "auto_post": bool(config.AUTO_POST)}
+    try:
+        from db import counts
+        from pipeline import is_busy
+        from schedule import due_slot, next_slot, now_tashkent
+
+        now = now_tashkent()
+        due = due_slot()
+        nxt = next_slot()
+        stats = await counts()
+        payload.update(
+            {
+                "busy": is_busy(),
+                "now": now.strftime("%Y-%m-%d %H:%M"),
+                "due": due.strftime("%H:%M") if due else None,
+                "next": nxt.strftime("%H:%M"),
+                "posted_today": stats.get("posted_today", 0),
+            }
+        )
+    except Exception as exc:
+        payload["err"] = str(exc)
+    return web.json_response(payload)
 
 
 async def webhook_handler(request: web.Request) -> web.Response:

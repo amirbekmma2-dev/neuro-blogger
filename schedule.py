@@ -83,16 +83,31 @@ def due_slot(
     now: datetime | None = None,
     grace_min: int = 18,
 ) -> datetime | None:
-    """If we are inside a peak window, return that slot (so we don't skip it)."""
+    """Slot that should be posted now.
+
+    A weekday/weekend slot stays due from its time until the next slot
+    (same calendar day). Render free restarts used to miss the 18-minute
+    grace and then sleep until the following peak.
+    """
     now = now or now_tashkent()
     if now.tzinfo is None:
         now = now.replace(tzinfo=TASHKENT)
     now = now.astimezone(TASHKENT)
+    prev = None
     for h, m in _slots_for(now, learned):
         cand = now.replace(hour=h, minute=m, second=0, microsecond=0)
-        delta = (now - cand).total_seconds()
-        if 0 <= delta <= grace_min * 60:
-            return cand
+        if cand <= now:
+            prev = cand
+    if prev is None or prev.date() != now.date():
+        for h, m in _slots_for(now, learned):
+            cand = now.replace(hour=h, minute=m, second=0, microsecond=0)
+            delta = (now - cand).total_seconds()
+            if 0 <= delta <= grace_min * 60:
+                return cand
+        return None
+    nxt = next_slot(learned=learned, after=prev)
+    if prev <= now < nxt:
+        return prev
     return None
 
 

@@ -94,6 +94,12 @@ async def counts() -> dict:
             if dt and dt.astimezone(TASHKENT).date() == today:
                 posted_today += 1
         data["posted_today"] = posted_today
+        latest = None
+        for (stamp,) in rows:
+            dt = _parse_utc(stamp)
+            if dt and (latest is None or dt > latest):
+                latest = dt
+        data["last_posted_at"] = latest.isoformat() if latest else None
         return data
 
 
