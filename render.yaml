@@ -24,6 +24,12 @@ services:
         sync: false
       - key: GROK_ACCESS_TOKEN
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: VEO_MODEL
+        value: models/veo-3.1-fast-generate-preview
+      - key: GEMINI_TEXT_MODEL
+        value: models/gemini-3.6-flash
       - key: VIDEO_RESOLUTION
         value: "480p"
       - key: VIDEO_DURATION
@@ -35,7 +41,7 @@ services:
       - key: AUTO_INTERVAL_MINUTES
         value: "120"
       - key: POSTS_PER_DAY
-        value: "8"
+        value: "2"
       - key: LLM_MODEL
         value: grok-4.6
       - key: VIDEO_MODEL

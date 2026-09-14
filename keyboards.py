@@ -64,7 +64,7 @@ def preview_kb(post_id: int) -> InlineKeyboardMarkup:
 def settings_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🔑 Ключ Grok API", callback_data="set:xai")],
+            [InlineKeyboardButton(text="🔑 Ключ Gemini", callback_data="set:xai")],
             [InlineKeyboardButton(text="📸 Instagram логин", callback_data="set:ig")],
             [
                 InlineKeyboardButton(text="🖼 Сгенерировать лицо", callback_data="set:face"),

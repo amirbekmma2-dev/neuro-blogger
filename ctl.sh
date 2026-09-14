@@ -4,7 +4,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE="neuro-blogger"
 PID_FILE="$DIR/.pid"
 LOG="$DIR/logs/bot.log"
-PY="$DIR/.venv/bin/python"
+PY="$DIR/.venv_new/bin/python"
 # Облако 24/7: Render webhook. Локальный start конфликтует с webhook — не гоняй оба.
 
 start_bg() {

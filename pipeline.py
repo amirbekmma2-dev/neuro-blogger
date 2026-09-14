@@ -7,16 +7,17 @@ from pathlib import Path
 from aiogram import Bot
 from aiogram.types import FSInputFile
 
-from config import AUTO_POST, CHARACTER_FILE, VIDEO_RESOLUTION, VIDEO_TOTAL_DURATION, VOICE_ID
+from config import AUTO_POST, CHARACTER_FILE, VIDEO_BEATS, VIDEO_RESOLUTION, VOICE_ID
 from db import create_post, get_post, list_posts, update_post
-from grok_api import (
-    GrokError,
-    ensure_character,
+from gemini_video import (
+    GeminiError,
+    VEO_CLIP_SECONDS,
     generate_thirty_second_video,
     invent_script,
     next_video_path,
     parse_beats,
 )
+from grok_api import ensure_character
 from instagram import InstagramError, post_reel, waiting_for_code
 from keyboards import preview_kb
 from media import prepare_reel
@@ -58,9 +59,10 @@ async def run_generation(
             when = ""
             if scheduled_for:
                 when = f" (chiqish {scheduled_for[11:16] if len(scheduled_for) >= 16 else scheduled_for})"
+            reel_len = VEO_CLIP_SECONDS * VIDEO_BEATS
             await bot.send_message(
                 chat_id,
-                f"#{post_id} {VIDEO_TOTAL_DURATION}s 9:16 sayohat reel{when}: ssenariy…",
+                f"#{post_id} {reel_len}s 9:16 sayohat reel{when}: ssenariy (Gemini)…",
             )
             script = await invent_script(topic, avoid=await _recent_ideas())
             await update_post(
@@ -76,7 +78,7 @@ async def run_generation(
 
             await bot.send_message(
                 chat_id,
-                f"#{post_id} Grok 3×10s = {VIDEO_TOTAL_DURATION}s 9:16 {VIDEO_RESOLUTION}, yuz qulflangan.",
+                f"#{post_id} Gemini Veo {VIDEO_BEATS}x{VEO_CLIP_SECONDS}s = {reel_len}s 9:16, yuz qulflangan.",
             )
             raw_path = next_video_path(post_id)
             p = load_persona()
@@ -107,10 +109,10 @@ async def run_generation(
             if publish:
                 await _publish(bot, chat_id, post_id)
             return post_id
-        except GrokError as exc:
-            logger.exception("generation grok")
+        except GeminiError as exc:
+            logger.exception("generation gemini")
             await update_post(post_id, status="failed", error=str(exc))
-            await bot.send_message(chat_id, f"#{post_id} Grok:\n{exc}")
+            await bot.send_message(chat_id, f"#{post_id} Gemini:\n{exc}")
         except Exception as exc:
             logger.exception("generation failed")
             await update_post(post_id, status="failed", error=str(exc))
@@ -165,7 +167,7 @@ async def regenerate_video(bot: Bot, chat_id: int, post_id: int) -> None:
     async with _busy:
         try:
             await update_post(post_id, status="generating")
-            await bot.send_message(chat_id, f"#{post_id} yangi {VIDEO_TOTAL_DURATION}s dublyaj…")
+            await bot.send_message(chat_id, f"#{post_id} yangi {VEO_CLIP_SECONDS * VIDEO_BEATS}s dublyaj (Gemini Veo)…")
             face = CHARACTER_FILE if CHARACTER_FILE.exists() else await ensure_character()
             raw_path = next_video_path(post_id)
             p = load_persona()

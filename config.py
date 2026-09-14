@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env_gemini")
 
 DATA_DIR = BASE_DIR / "data"
 VIDEO_DIR = DATA_DIR / "videos"
@@ -21,13 +22,16 @@ ADMIN_USER_IDS = {
 }
 
 XAI_API_KEY = os.getenv("XAI_API_KEY", "").strip()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+VEO_MODEL = os.getenv("VEO_MODEL", "models/veo-3.1-fast-generate-preview").strip()
+GEMINI_TEXT_MODEL = os.getenv("GEMINI_TEXT_MODEL", "models/gemini-3.6-flash").strip()
 XAI_BASE = "https://api.x.ai/v1"
 LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
 VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
 VIDEO_EXTEND_MODEL = os.getenv("VIDEO_EXTEND_MODEL", "grok-imagine-video").strip()
 VIDEO_DURATION = int(os.getenv("VIDEO_DURATION", "10") or "10")
-VIDEO_BEATS = 3
+VIDEO_BEATS = 5
 VIDEO_TOTAL_DURATION = VIDEO_BEATS * 10
 VIDEO_RESOLUTION = os.getenv("VIDEO_RESOLUTION", "480p").strip()
 VIDEO_ASPECT = "9:16"
@@ -48,7 +52,9 @@ WEBAPP_PORT = int(os.getenv("PORT") or os.getenv("WEBAPP_PORT") or "10000")
 
 def reload_env() -> None:
     load_dotenv(ENV_FILE, override=True)
-    global BOT_TOKEN, ADMIN_USER_IDS, XAI_API_KEY, LLM_MODEL, IMAGE_MODEL
+    load_dotenv(BASE_DIR / ".env_gemini", override=True)
+    global BOT_TOKEN, ADMIN_USER_IDS, XAI_API_KEY, GEMINI_API_KEY, VEO_MODEL
+    global GEMINI_TEXT_MODEL, LLM_MODEL, IMAGE_MODEL
     global VIDEO_MODEL, VIDEO_EXTEND_MODEL, VIDEO_DURATION, VIDEO_RESOLUTION, VOICE_ID
     global AUTO_POST, AUTO_INTERVAL_MINUTES, POSTS_PER_DAY, PREP_MINUTES
     global IG_USERNAME, IG_PASSWORD, WEBHOOK_URL, WEBHOOK_PATH, WEBAPP_HOST, WEBAPP_PORT
@@ -57,6 +63,9 @@ def reload_env() -> None:
         int(x) for x in os.getenv("ADMIN_USER_IDS", "1342016402").split(",") if x.strip().isdigit()
     }
     XAI_API_KEY = os.getenv("XAI_API_KEY", "").strip()
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+    VEO_MODEL = os.getenv("VEO_MODEL", "models/veo-3.1-fast-generate-preview").strip()
+    GEMINI_TEXT_MODEL = os.getenv("GEMINI_TEXT_MODEL", "models/gemini-3.6-flash").strip()
     LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
     IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
     VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
@@ -66,7 +75,7 @@ def reload_env() -> None:
     VOICE_ID = os.getenv("VOICE_ID", "rex").strip()
     AUTO_POST = os.getenv("AUTO_POST", "1").strip() not in {"0", "false", "no"}
     AUTO_INTERVAL_MINUTES = int(os.getenv("AUTO_INTERVAL_MINUTES", "120"))
-    POSTS_PER_DAY = int(os.getenv("POSTS_PER_DAY", "8"))
+    POSTS_PER_DAY = int(os.getenv("POSTS_PER_DAY", "2"))
     PREP_MINUTES = int(os.getenv("PREP_MINUTES", "30") or "30")
     IG_USERNAME = os.getenv("IG_USERNAME", "").strip()
     IG_PASSWORD = os.getenv("IG_PASSWORD", "").strip()
@@ -103,13 +112,13 @@ def ensure_dirs() -> None:
 
 def missing_setup() -> list[str]:
     reload_env()
-    from grok_auth import grok_ready
+    from gemini_video import gemini_ready
 
     gaps = []
     if not BOT_TOKEN:
         gaps.append("BOT_TOKEN")
-    if not grok_ready():
-        gaps.append("Grok")
+    if not gemini_ready():
+        gaps.append("Gemini")
     if not IG_USERNAME or not IG_PASSWORD:
         gaps.append("Instagram")
     return gaps

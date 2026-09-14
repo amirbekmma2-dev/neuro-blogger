@@ -15,27 +15,15 @@ logger = logging.getLogger(__name__)
 
 TASHKENT = timezone(timedelta(hours=5))
 
-# Weekday: commute / lunch / after school / prime time
+# 2 Reel/kun: ertalab + kechki praym (Toshkent)
 WEEKDAY_SLOTS = [
-    (7, 40),
     (9, 10),
-    (12, 20),
-    (14, 40),
-    (17, 20),
     (19, 0),
-    (20, 30),
-    (22, 0),
 ]
-# Weekend: later morning, same evening peak
+# Weekend: same two peaks
 WEEKEND_SLOTS = [
-    (9, 30),
-    (11, 0),
-    (13, 0),
-    (15, 30),
-    (17, 30),
+    (9, 10),
     (19, 0),
-    (20, 30),
-    (22, 0),
 ]
 
 
