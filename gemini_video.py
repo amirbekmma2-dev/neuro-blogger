@@ -214,8 +214,6 @@ def _generate_clip_sync(prompt: str, dest: Path, reference_image: Path | None) -
         "duration_seconds": VEO_CLIP_SECONDS,
         "number_of_videos": 1,
         "person_generation": "allow_adult",
-        "generate_audio": True,
-        "enhance_prompt": True,
     }
     if ref is not None:
         kwargs["reference_images"] = [ref]
