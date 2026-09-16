@@ -12,7 +12,7 @@ from db import create_post, get_post, list_posts, update_post
 from gemini_video import (
     GeminiError,
     VEO_CLIP_SECONDS,
-    generate_thirty_second_video,
+    generate_thirty_second_video as generate_veo_video,
     invent_script,
     next_video_path,
     parse_beats,
@@ -82,12 +82,31 @@ async def run_generation(
             )
             raw_path = next_video_path(post_id)
             p = load_persona()
-            await generate_thirty_second_video(
-                parse_beats(script["video_prompt"]),
-                raw_path,
-                reference_image=face,
-                voice_id=p.get("voice_id") or VOICE_ID,
-            )
+            try:
+                await generate_veo_video(
+                    parse_beats(script["video_prompt"]),
+                    raw_path,
+                    reference_image=face,
+                    voice_id=p.get("voice_id") or VOICE_ID,
+                )
+            except GeminiError as ve:
+                msg = str(ve).lower()
+                if "429" in msg or "resource_exhausted" in msg or "quota" in msg or "exhausted" in msg:
+                    await bot.send_message(
+                        chat_id,
+                        f"#{post_id} Veo kvota 0 (429) — переключаюсь на бесплатный конвейер (фото+uz озвучка, 0 сум).",
+                    )
+                    from free_reel import generate_free_reel_video
+
+                    free_path = raw_path.with_name(raw_path.stem + "_free.mp4")
+                    await generate_free_reel_video(
+                        parse_beats(script["video_prompt"]),
+                        free_path,
+                        reference_image=face,
+                    )
+                    raw_path = free_path
+                else:
+                    raise
 
             await bot.send_message(chat_id, f"#{post_id} Reels yig'ish…")
             reel = await asyncio.to_thread(prepare_reel, raw_path)
@@ -171,12 +190,27 @@ async def regenerate_video(bot: Bot, chat_id: int, post_id: int) -> None:
             face = CHARACTER_FILE if CHARACTER_FILE.exists() else await ensure_character()
             raw_path = next_video_path(post_id)
             p = load_persona()
-            await generate_thirty_second_video(
-                parse_beats(post["video_prompt"] or ""),
-                raw_path,
-                reference_image=face,
-                voice_id=p.get("voice_id") or VOICE_ID,
-            )
+            try:
+                await generate_veo_video(
+                    parse_beats(post["video_prompt"] or ""),
+                    raw_path,
+                    reference_image=face,
+                    voice_id=p.get("voice_id") or VOICE_ID,
+                )
+            except GeminiError as ve:
+                msg = str(ve).lower()
+                if "429" in msg or "resource_exhausted" in msg or "quota" in msg or "exhausted" in msg:
+                    from free_reel import generate_free_reel_video
+
+                    free_path = raw_path.with_name(raw_path.stem + "_free.mp4")
+                    await generate_free_reel_video(
+                        parse_beats(post["video_prompt"] or ""),
+                        free_path,
+                        reference_image=face,
+                    )
+                    raw_path = free_path
+                else:
+                    raise
             reel = await asyncio.to_thread(prepare_reel, raw_path)
             await update_post(post_id, video_path=str(reel), status="ready")
             await bot.send_video(
