@@ -93,19 +93,19 @@ def fetch_image(prompt: str, dest: Path, seed: int | None = None) -> Path:
 
 
 async def tts_uz(text: str, dest: Path, voice: str = "") -> Path:
-    """Edge-TTS uz, бесплатно, без ключа. Мужской Sardor для Motiva."""
-    import edge_tts
+    """Google TTS (uz), бесплатно, надежно."""
+    from gtts import gTTS
 
     dest.parent.mkdir(parents=True, exist_ok=True)
-    voice = voice or TTS_VOICE_MALE
-    # Edge режет длинные куски — бьем по предложениям, клеим ffmpeg-ом
-    communicate = edge_tts.Communicate(text, voice)
+    def _gen():
+        tts = gTTS(text=text, lang="tr", slow=False)
+        tts.save(str(dest))
     try:
-        await communicate.save(str(dest))
+        await asyncio.to_thread(_gen)
     except Exception as exc:
-        raise FreeReelError(f"Edge-TTS xato: {exc}") from exc
+        raise FreeReelError(f"gTTS xato: {exc}") from exc
     if not dest.exists() or dest.stat().st_size < 500:
-        raise FreeReelError("Edge-TTS bo'sh audio")
+        raise FreeReelError("gTTS bo'sh audio")
     return dest
 
 

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import httpx
 
+import config
 from config import (
     CHARACTER_FILE,
     IMAGE_MODEL,
@@ -22,9 +23,8 @@ from config import (
     VIDEO_DIR,
     VIDEO_TOTAL_DURATION,
     VOICE_ID,
-    XAI_BASE,
 )
-from grok_auth import bearer_token
+from grok_auth import bearer_token, cli_client_version
 from persona import load_persona
 
 logger = logging.getLogger(__name__)
@@ -42,10 +42,20 @@ def _headers() -> dict[str, str]:
         raise GrokError(
             "Grok ga ulanib bo'lmadi. grok login qil yoki console.x.ai dan XAI_API_KEY qo'y."
         )
-    return {
+    headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
+    if not config.XAI_API_KEY:
+        # OAuth (subscription) credential: the CLI proxy requires client identity.
+        headers.update(
+            {
+                "x-grok-client-version": cli_client_version(),
+                "x-grok-client-identifier": "grok-shell",
+                "User-Agent": "xai-grok-cli",
+            }
+        )
+    return headers
 
 
 def _file_data_uri(path: Path, mime: str | None = None) -> str:
@@ -71,14 +81,16 @@ async def chat_text(system: str, user: str, model: str | None = None) -> str:
             {"role": "user", "content": user},
         ],
         "temperature": 0.9,
+        "max_tokens": 4000,
     }
-    async with httpx.AsyncClient(timeout=120) as client:
-        r = await client.post(f"{XAI_BASE}/chat/completions", headers=_headers(), json=payload)
-        if r.status_code >= 400 and (model or LLM_MODEL) != "grok-4.5":
-            logger.warning("LLM %s failed %s, fallback grok-4.5", payload["model"], r.status_code)
-            payload["model"] = "grok-4.5"
+    fallback = "grok-4.7"
+    async with httpx.AsyncClient(timeout=240) as client:
+        r = await client.post(f"{config.XAI_BASE}/chat/completions", headers=_headers(), json=payload)
+        if r.status_code >= 400 and (model or LLM_MODEL) != fallback:
+            logger.warning("LLM %s failed %s, fallback %s", payload["model"], r.status_code, fallback)
+            payload["model"] = fallback
             r = await client.post(
-                f"{XAI_BASE}/chat/completions", headers=_headers(), json=payload
+                f"{config.XAI_BASE}/chat/completions", headers=_headers(), json=payload
             )
         if r.status_code >= 400:
             raise GrokError(f"Grok LLM ошибка {r.status_code}: {r.text[:500]}")
@@ -236,7 +248,7 @@ async def generate_image(prompt: str, dest: Path, aspect_ratio: str = "9:16") ->
         "resolution": "1k",
     }
     async with httpx.AsyncClient(timeout=180) as client:
-        r = await client.post(f"{XAI_BASE}/images/generations", headers=_headers(), json=payload)
+        r = await client.post(f"{config.XAI_BASE}/images/generations", headers=_headers(), json=payload)
         if r.status_code >= 400:
             raise GrokError(f"Grok image ошибка {r.status_code}: {r.text[:500]}")
         data = r.json()
@@ -315,17 +327,17 @@ async def generate_video_ex(
         body["reference_audios"] = [{"voice_id": voice_id}]
 
     async with httpx.AsyncClient(timeout=60) as client:
-        r = await client.post(f"{XAI_BASE}/videos/generations", headers=_headers(), json=body)
+        r = await client.post(f"{config.XAI_BASE}/videos/generations", headers=_headers(), json=body)
         if r.status_code >= 400 and first_frame and reference_image:
             logger.warning("video image+ref failed %s, retry image only", r.text[:240])
             body.pop("reference_images", None)
-            r = await client.post(f"{XAI_BASE}/videos/generations", headers=_headers(), json=body)
+            r = await client.post(f"{config.XAI_BASE}/videos/generations", headers=_headers(), json=body)
         if r.status_code >= 400 and voice_id:
             logger.warning("video with voice failed %s, retry without voice", r.text[:240])
             body.pop("reference_audios", None)
             if reference_image and reference_image.exists() and "reference_images" not in body:
                 body["reference_images"] = [{"url": _file_data_uri(reference_image)}]
-            r = await client.post(f"{XAI_BASE}/videos/generations", headers=_headers(), json=body)
+            r = await client.post(f"{config.XAI_BASE}/videos/generations", headers=_headers(), json=body)
         if r.status_code >= 400:
             raise GrokError(f"Grok video ошибка {r.status_code}: {r.text[:700]}")
         request_id = r.json().get("request_id")
@@ -360,12 +372,12 @@ async def extend_video(
         "video": video,
     }
     async with httpx.AsyncClient(timeout=180) as client:
-        r = await client.post(f"{XAI_BASE}/videos/extensions", headers=_headers(), json=body)
+        r = await client.post(f"{config.XAI_BASE}/videos/extensions", headers=_headers(), json=body)
         if r.status_code >= 400 and source_path and source_path.exists() and source_url:
             logger.warning("extend url failed %s, retry data-uri", r.text[:300])
             body["video"] = {"url": _file_data_uri(source_path)}
             r = await client.post(
-                f"{XAI_BASE}/videos/extensions", headers=_headers(), json=body
+                f"{config.XAI_BASE}/videos/extensions", headers=_headers(), json=body
             )
         if r.status_code >= 400:
             raise GrokError(f"Grok extend ошибка {r.status_code}: {r.text[:700]}")
@@ -443,7 +455,7 @@ async def _poll_video(request_id: str, timeout_s: int = 600) -> str:
         while True:
             if asyncio.get_event_loop().time() > deadline:
                 raise GrokError("Grok видео не успело за 10 минут")
-            r = await client.get(f"{XAI_BASE}/videos/{request_id}", headers=_headers())
+            r = await client.get(f"{config.XAI_BASE}/videos/{request_id}", headers=_headers())
             if r.status_code >= 400:
                 raise GrokError(f"Опрос видео {r.status_code}: {r.text[:400]}")
             data = r.json()

@@ -52,8 +52,8 @@ def get_client() -> Client:
     reload_env()
     user = config.IG_USERNAME
     password = config.IG_PASSWORD
-    if not user or not password:
-        raise InstagramError("Нет IG_USERNAME / IG_PASSWORD")
+    if not user:
+        raise InstagramError("Нет IG_USERNAME")
     cl = Client()
     cl.delay_range = [1, 3]
     cl.set_locale("en_US")
@@ -66,13 +66,14 @@ def get_client() -> Client:
             sid = (cl.sessionid or "").strip() or (cl.settings.get("authorization_data") or {}).get("sessionid")
             if sid:
                 cl.login_by_sessionid(sid)
-            else:
-                cl.login(user, password)
-            cl.get_timeline_feed()
-            logger.info("instagram session ok")
-            return cl
+                cl.get_timeline_feed()
+                logger.info("instagram session ok via sessionid")
+                return cl
         except Exception as exc:
-            logger.warning("session failed (%s), fresh login", exc)
+            logger.warning("sessionid login failed (%s)", exc)
+
+    if not password:
+        raise InstagramError("Instagram sessionid failed and no password provided")
 
     try:
         cl.login(user, password)
@@ -88,7 +89,7 @@ def get_client() -> Client:
 
     SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
     cl.dump_settings(SESSION_FILE)
-    logger.info("instagram logged in, session saved")
+    logger.info("instagram logged in via password, session saved")
     return cl
 
 

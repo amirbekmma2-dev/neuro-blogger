@@ -43,7 +43,7 @@ services:
       - key: POSTS_PER_DAY
         value: "2"
       - key: LLM_MODEL
-        value: grok-4.6
+        value: grok-4.7
       - key: VIDEO_MODEL
         value: grok-imagine-video-1.5
       - key: VOICE_ID

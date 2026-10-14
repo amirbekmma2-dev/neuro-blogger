@@ -142,5 +142,22 @@ def bearer_token() -> str:
     return grok_session_token()
 
 
+def cli_client_version() -> str:
+    """Version the Grok CLI proxy expects in identity headers (it rejects stale clients)."""
+    env = os.getenv("GROK_CLIENT_VERSION", "").strip()
+    if env:
+        return env
+    vf = AUTH_FILE.parent / "version.json"
+    if vf.exists():
+        try:
+            data = json.loads(vf.read_text(encoding="utf-8"))
+            ver = str(data.get("stable_version") or data.get("version") or "").strip()
+            if ver:
+                return ver
+        except (OSError, ValueError):
+            pass
+    return "1.0.52"
+
+
 def grok_ready() -> bool:
     return bool(bearer_token())

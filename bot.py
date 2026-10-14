@@ -27,10 +27,8 @@ from config import (
     upsert_env,
 )
 from grok_auth import grok_ready
-from gemini_video import gemini_ready
 from db import counts, get_post, init_db, list_posts, update_post
-from gemini_video import GeminiError
-from grok_api import ensure_character
+from grok_api import GrokError, ensure_character
 from instagram import account_info, submit_code, waiting_for_code
 from keyboards import (
     BTN_GENERATE,
@@ -95,12 +93,8 @@ class Form(StatesGroup):
 def setup_text() -> str:
     gaps = missing_setup()
     ig = f"@{IG_USERNAME}" if IG_USERNAME else "нет"
-    if gemini_ready():
-        grok = "Gemini (ssenariy + Veo video)"
-    elif XAI_API_KEY:
-        grok = "ключ API (Grok, запасной)"
-    elif grok_ready():
-        grok = "сессия grok.com (запасная)"
+    if grok_ready():
+        grok = "Grok (API kalit)" if XAI_API_KEY else "Grok (obuna/sessiya)"
     else:
         grok = "нет"
     face = "есть" if CHARACTER_FILE.exists() else "нет"
@@ -111,16 +105,16 @@ def setup_text() -> str:
         f"Grok: {grok}",
         f"Instagram: {ig}",
         f"Лицо персонажа: {face}",
-        f"Sifat: 9:16 · 40s (5x8 Veo) · 2/kun · slotdan 30 daqiqa oldin tayyor",
+        f"Sifat: 9:16 · {config.VIDEO_BEATS}x10s · {config.POSTS_PER_DAY}/kun · slotdan 30 daqiqa oldin tayyor",
         f"Avtopilot: {'yoqilgan' if config.AUTO_POST else 'off'}",
         f"Hozir band: {'ha' if is_busy() else 'yoq'}",
     ]
     if gaps:
         lines += ["", "Не хватает: " + ", ".join(gaps)]
-        if "Gemini" in gaps:
+        if "Grok" in gaps:
             lines += [
                 "",
-                "Gemini kalit qo'y: ⚙️ → 🔑 yoki .env_gemini ga GEMINI_API_KEY.",
+                "Grok kalit qo'y: ⚙️ → 🔑 (XAI_API_KEY) yoki `grok login`.",
             ]
     else:
         lines += ["", "Avtopilot o'zi yozadi va Instagramga chiqaradi. 🎬 — qo'shimcha reel."]
@@ -177,10 +171,10 @@ async def cmd_queue(message: Message) -> None:
 @router.message(Command("idea"))
 @router.message(F.text == BTN_IDEA)
 async def cmd_idea(message: Message) -> None:
-    from gemini_video import invent_script
+    from grok_api import invent_script
 
-    if "Gemini" in missing_setup():
-        await message.answer("Gemini yo'q. ⚙️ Настройки.")
+    if "Grok" in missing_setup():
+        await message.answer("Grok yo'q. ⚙️ Настройки.")
         return
     wait = await message.answer("Думаю тему…")
     try:
@@ -189,7 +183,7 @@ async def cmd_idea(message: Message) -> None:
             f"Идея: {script['idea']}\n\nХук: {script['hook']}\n\n{script['caption']}\n\n"
             "Если ок — 🎬 Сгенерировать и выбери «своя тема», вставь эту идею."
         )
-    except GeminiError as exc:
+    except GrokError as exc:
         await wait.edit_text(str(exc))
 
 
@@ -197,8 +191,8 @@ async def cmd_idea(message: Message) -> None:
 @router.message(F.text == BTN_GENERATE)
 async def cmd_generate(message: Message, state: FSMContext) -> None:
     await state.clear()
-    if "Gemini" in missing_setup():
-        await message.answer("Gemini yo'q. ⚙️ Настройки → ключ.")
+    if "Grok" in missing_setup():
+        await message.answer("Grok yo'q. ⚙️ Настройки → ключ.")
         return
     if is_busy():
         await message.answer("Уже генерирую. Дождись.")
@@ -310,9 +304,9 @@ async def cb_xai(cb: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(Form.xai)
     await cb.answer()
     await cb.message.answer(
-        "Пришли ключ Gemini с https://aistudio.google.com/apikey "
-        "(сохранится как GEMINI_API_KEY — сценарии и Veo-видео). "
-        "Сообщение потом лучше удали."
+        "Пришли ключ xAI с https://console.x.ai "
+        "(сохранится как XAI_API_KEY — сценарии и видео Grok). "
+        "Сообщение потом лучше удали. Если ключа нет — просто `grok login` на сервере."
     )
 
 
@@ -321,9 +315,9 @@ async def on_xai(message: Message, state: FSMContext) -> None:
     await state.clear()
     key = (message.text or "").strip()
     if len(key) < 10:
-        await message.answer("Ключ слишком короткий. Пришли полный ключ из AI Studio.")
+        await message.answer("Ключ слишком короткий. Пришли полный ключ из console.x.ai.")
         return
-    upsert_env("GEMINI_API_KEY", key)
+    upsert_env("XAI_API_KEY", key)
     try:
         await message.delete()
     except Exception:
@@ -430,8 +424,8 @@ async def fallback_text(message: Message, state: FSMContext) -> None:
     text = (message.text or "").strip()
     if not text or text.startswith("/"):
         return
-    if "Gemini" in missing_setup():
-        await message.answer("Gemini yo'q. ⚙️ Настройки.")
+    if "Grok" in missing_setup():
+        await message.answer("Grok yo'q. ⚙️ Настройки.")
         return
     if is_busy():
         await message.answer("Уже генерирую. Дождись.")

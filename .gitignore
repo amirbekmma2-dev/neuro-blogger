@@ -10,5 +10,6 @@ data/*.db-wal
 data/videos/
 data/character.*
 ig_session.json
+data/ig_web_cookies.json
 logs/
 .pid

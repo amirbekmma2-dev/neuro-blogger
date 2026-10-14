@@ -22,16 +22,20 @@ ADMIN_USER_IDS = {
 }
 
 XAI_API_KEY = os.getenv("XAI_API_KEY", "").strip()
+# OAuth (subscription) token only works against the Grok CLI chat proxy;
+# a pay-as-you-go XAI_API_KEY must use the developer API.
+XAI_API_BASE = "https://api.x.ai/v1"
+GROK_CLI_BASE = os.getenv("GROK_CLI_BASE", "https://cli-chat-proxy.grok.com/v1").strip()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 VEO_MODEL = os.getenv("VEO_MODEL", "models/veo-3.1-fast-generate-preview").strip()
-GEMINI_TEXT_MODEL = os.getenv("GEMINI_TEXT_MODEL", "models/gemini-3.6-flash").strip()
-XAI_BASE = "https://api.x.ai/v1"
-LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
+GEMINI_TEXT_MODEL = os.getenv("GEMINI_TEXT_MODEL", "models/gemini-3.5-flash").strip()
+XAI_BASE = XAI_API_BASE if XAI_API_KEY else GROK_CLI_BASE
+LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.7").strip()
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
 VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
 VIDEO_EXTEND_MODEL = os.getenv("VIDEO_EXTEND_MODEL", "grok-imagine-video").strip()
 VIDEO_DURATION = int(os.getenv("VIDEO_DURATION", "10") or "10")
-VIDEO_BEATS = 5
+VIDEO_BEATS = 3
 VIDEO_TOTAL_DURATION = VIDEO_BEATS * 10
 VIDEO_RESOLUTION = os.getenv("VIDEO_RESOLUTION", "480p").strip()
 VIDEO_ASPECT = "9:16"
@@ -53,7 +57,7 @@ WEBAPP_PORT = int(os.getenv("PORT") or os.getenv("WEBAPP_PORT") or "10000")
 def reload_env() -> None:
     load_dotenv(ENV_FILE, override=True)
     load_dotenv(BASE_DIR / ".env_gemini", override=True)
-    global BOT_TOKEN, ADMIN_USER_IDS, XAI_API_KEY, GEMINI_API_KEY, VEO_MODEL
+    global BOT_TOKEN, ADMIN_USER_IDS, XAI_API_KEY, XAI_BASE, GEMINI_API_KEY, VEO_MODEL
     global GEMINI_TEXT_MODEL, LLM_MODEL, IMAGE_MODEL
     global VIDEO_MODEL, VIDEO_EXTEND_MODEL, VIDEO_DURATION, VIDEO_RESOLUTION, VOICE_ID
     global AUTO_POST, AUTO_INTERVAL_MINUTES, POSTS_PER_DAY, PREP_MINUTES
@@ -63,10 +67,11 @@ def reload_env() -> None:
         int(x) for x in os.getenv("ADMIN_USER_IDS", "1342016402").split(",") if x.strip().isdigit()
     }
     XAI_API_KEY = os.getenv("XAI_API_KEY", "").strip()
+    XAI_BASE = XAI_API_BASE if XAI_API_KEY else GROK_CLI_BASE
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
     VEO_MODEL = os.getenv("VEO_MODEL", "models/veo-3.1-fast-generate-preview").strip()
-    GEMINI_TEXT_MODEL = os.getenv("GEMINI_TEXT_MODEL", "models/gemini-3.6-flash").strip()
-    LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6").strip()
+    GEMINI_TEXT_MODEL = os.getenv("GEMINI_TEXT_MODEL", "models/gemini-3.5-flash").strip()
+    LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.7").strip()
     IMAGE_MODEL = os.getenv("IMAGE_MODEL", "grok-imagine-image-2.0").strip()
     VIDEO_MODEL = os.getenv("VIDEO_MODEL", "grok-imagine-video-1.5").strip()
     VIDEO_EXTEND_MODEL = os.getenv("VIDEO_EXTEND_MODEL", "grok-imagine-video").strip()
@@ -112,13 +117,13 @@ def ensure_dirs() -> None:
 
 def missing_setup() -> list[str]:
     reload_env()
-    from gemini_video import gemini_ready
+    from grok_auth import grok_ready
 
     gaps = []
     if not BOT_TOKEN:
         gaps.append("BOT_TOKEN")
-    if not gemini_ready():
-        gaps.append("Gemini")
+    if not grok_ready():
+        gaps.append("Grok")
     if not IG_USERNAME or not IG_PASSWORD:
         gaps.append("Instagram")
     return gaps

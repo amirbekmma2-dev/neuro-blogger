@@ -4,57 +4,52 @@ from pathlib import Path
 from config import PERSONA_FILE
 
 DEFAULT = {
-    "name": "Motiv",
-    "ig_handle": "motivstile.ai",
+    "name": "Zamon",
+    "ig_handle": "zamonlar.ai",
     "niche": (
-        "vaqt sayohati: o'tmish (Yunoniston, Misr, SSSR, Toshkent 2000) "
-        "va kelajak (Toshkent 2100, Mars) — agent o'zi davrni tanlaydi"
+        "tarixiy voqealar: Qadimgi Turkiston, Amir Temur, 1865-yil Toshkent, "
+        "1937-yil Qora yillar, Qo'qon xonligi, antik dunyo va sirli tarix — agent o'zi davrni tanlaydi"
     ),
     "language": "uz",
-    "tone": "ko'cha uslubi, hayrat, hazil, 1-soniyada ushlaydi, suvsiz",
-    "audience": "O'zbekiston, 16-35 yosh, Reels, tarix va kelajakka qiziqadiganlar",
+    "tone": "kinematografik, dramatik, hayrat, hazil emas, 1-soniyada ushlaydi, suvsiz",
+    "audience": "O'zbekiston, 16-45 yosh, Reels, tarix va sirli voqealarga qiziquvchilar",
     "character_prompt": (
-        "Photorealistic vertical 9:16 cinematic portrait of a young Uzbek man, "
-        "about 25, short dark hair, sharp eyes, clean-shaven, wearing a dark wool coat and black beanie, "
-        "standing as a time traveler, confident look into camera, natural light, "
+        "Photorealistic vertical 9:16 cinematic portrait of a young Uzbek historian and time traveler, "
+        "about 25, short dark hair, sharp eyes, clean-shaven, wearing a dark wool coat, "
+        "standing in ancient historical setting, confident look into camera, natural light, "
         "this exact face and head are locked for every scene, "
         "no text, no watermark, no logo"
     ),
     "hashtags": [
-        "#sayohat",
         "#tarix",
-        "#kelajak",
+        "#zamonlar",
         "#toshkent",
         "#ozbekiston",
-        "#retro",
-        "#sssr",
-        "#motivstileai",
+        "#amirtemur",
+        "#qorayillar",
+        "#turkiston",
         "#reelsuz",
-        "#vaqtsayohati",
+        "#sarguzasht",
+        "#zamonlarai",
     ],
-    "cta": "Saqla. Keyin qayerga uchay? Kommentga yoz.",
+    "cta": "Saqla va obuna bo'l. Keyingi tarix qaysi? Kommentga yoz.",
     "voice_id": "rex",
     "viral_topics": [
-        "Qadimgi Yunoniston: Afina bozori va olimpiada",
-        "Qadimgi Misr: ehram oldida qum va fir'avn",
-        "SSSR Toshkent 1980: tramvay, palto, qor",
-        "Toshkent 2000: Abdulla Qahhor ko'chasi, qish",
-        "Samarqand Ipak yo'li: Registon, karvon",
-        "Buxoro o'rta asr: madrasa va choyxona",
-        "Rim kolizey: gladiator changi",
-        "Toshkent 2100: neon, uchuvchi taksi",
-        "Mars koloniyasi: qizil qum, o'zbek bayrog'i",
-        "Kelajak bozori: robot somsa pishiradi",
-        "Chingizxon stepi: ot va bayroq",
-        "Atlantida: suv osti shahar",
-        "Yaponiya 1600: samuray va gilos",
-        "Toshkent metro 1977: birinchi poyezd",
-        "Parij 1889: Eyfel minora qurilishi",
-        "Xorazm qadim: qal'a va cho'l shamoli",
-        "2050 Toshkent: yomg'ir ostida neon choyxona",
-        "Qadimgi Xitoy: ipak va ajdaho festivali",
-        "Nukus 1995: savdo rastasi, kassetalar",
-        "Oy stansiyasi 2140: o'zbek oshxonasi",
+        "1865-yil: Rossiya imperiyasi qo'shinlari Toshkent ostonasida",
+        "1937-yil: Bir tamg'a, minglab taqdirlar va Qora yillar",
+        "Amir Temurning qabri ochildi: ikki kundan keyin urush boshlandi",
+        "1398-yil: Dehli yaqinida Amir Temur qarshisida jang",
+        "1876-yil: Qo'qon xonligi tarix sahnasidan tushdi",
+        "Vodiy qo'zg'oloni va erk uchun kurash",
+        "Ibrohimbek: Turkiston kurashining oxirgi yirik qahramoni",
+        "Registon maydoni XVII asrda: karvonlar va madrasalar",
+        "Buxoro amirligi oxirgi kunlari va o'zgarishlar",
+        "Xorazm qadimiy qal'alari va cho'l sirlari",
+        "Qadimgi Samarqand: Ipak yo'lining yuragi",
+        "Toshkentning eski darvozalari va qadimiy turmush",
+        "1916-yil qo'zg'oloni: Turkistonda og'iz yopilmagan yillar",
+        "Alisher Navoiy va Husayn Bayqaro davrida Hirot",
+        "Ulughbek rasadxonasi va o'rta asr osmon sirlari",
     ],
 }
 

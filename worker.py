@@ -110,7 +110,7 @@ async def auto_loop(bot: Bot) -> None:
         slot_txt = format_slots(learned) if learned else "09:10 19:00"
         await bot.send_message(
             chat,
-            "Avtopilot 24/7: 2 ta 40s 9:16 sayohat Reel/kun.\n"
+            f"Avtopilot 24/7: {config.POSTS_PER_DAY} ta {10 * config.VIDEO_BEATS}s 9:16 sayohat Reel/kun.\n"
             f"Toshkent: {slot_txt}\n"
             f"Video slotdan {lead} daqiqa oldin tayyor, chiqish aniq vaqtda.\n"
             f"Keyingi: {nxt.astimezone(TASHKENT).strftime('%d.%m %H:%M')}",
